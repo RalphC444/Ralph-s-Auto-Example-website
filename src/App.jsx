@@ -410,6 +410,11 @@ function parseDateKey(key) {
   return new Date(y, m - 1, d);
 }
 
+function formatDateKeyMMDDYYYY(key) {
+  const [y, m, d] = key.split("-");
+  return `${m}/${d}/${y}`;
+}
+
 function isClosedWeekday(year, month, day) {
   return new Date(year, month, day).getDay() === 0;
 }
@@ -561,7 +566,8 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
     return [
       `${SHOP_NAME} — appointment request`,
       "",
-      `Preferred: ${selectedDateKey || "—"} at ${timeLabel || "—"}`,
+      `Appointment Date: ${selectedDateKey ? formatDateKeyMMDDYYYY(selectedDateKey) : "—"}`,
+      `Appointment Time: ${timeLabel || "—"}`,
       `Service: ${serviceRequested || "—"}`,
       `Issue: ${issueDescription.trim() || "—"}`,
       `Vehicle: ${vehicleYear || "—"} ${vehicleMake || "—"} ${vehicleModel || "—"}${vehicleTrim ? ` (${vehicleTrim})` : ""}`,
@@ -730,17 +736,31 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
       <p className="marketing-card__body">{body}</p>
 
       <div className="lead-wizard" aria-label="Schedule contact steps">
-        <ol className="lead-wizard__rail" aria-hidden="true">
-          <li className={step >= 1 ? "lead-wizard__rail-dot is-active" : "lead-wizard__rail-dot"} />
-          <li className={step >= 2 ? "lead-wizard__rail-dot is-active" : "lead-wizard__rail-dot"} />
-          <li className={step >= 3 ? "lead-wizard__rail-dot is-active" : "lead-wizard__rail-dot"} />
-        </ol>
-        <p className="lead-wizard__step-label">
-          {step === 1 &&
-            (variant === "modal" ? "Select a date & time" : "1 — Pick a date & time")}
-          {step === 2 && (variant === "modal" ? "Service & vehicle" : "2 — Service & vehicle")}
-          {step === 3 && (variant === "modal" ? "Contact details" : "3 — Contact details")}
-        </p>
+        <div className="lead-wizard__step-row">
+          {step > 1 && (
+            <button
+              type="button"
+              className="lead-wizard__step-back"
+              onClick={() => setStep((s) => s - 1)}
+              aria-label="Go back"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+          <p className="lead-wizard__step-label">
+            {step === 1 &&
+              (variant === "modal" ? "Select a date & time" : "1 — Pick a date & time")}
+            {step === 2 && (variant === "modal" ? "Service & vehicle" : "2 — Service & vehicle")}
+            {step === 3 && (variant === "modal" ? "Contact details" : "3 — Contact details")}
+          </p>
+          <ol className="lead-wizard__rail" aria-hidden="true">
+            <li className={step >= 1 ? "lead-wizard__rail-dot is-active" : "lead-wizard__rail-dot"} />
+            <li className={step >= 2 ? "lead-wizard__rail-dot is-active" : "lead-wizard__rail-dot"} />
+            <li className={step >= 3 ? "lead-wizard__rail-dot is-active" : "lead-wizard__rail-dot"} />
+          </ol>
+        </div>
 
         <form
           ref={leadFormRef}
@@ -749,7 +769,16 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
           onSubmit={handleLeadSubmit}
         >
           {/* Field names should match your EmailJS template variables (e.g. {{user_name}}, {{message}}). */}
-          <input type="hidden" name="subject" value={`${SHOP_NAME} — book appointment`} readOnly />
+          <input
+            type="hidden"
+            name="title"
+            value={`${selectedDateKey ? formatDateKeyMMDDYYYY(selectedDateKey) : "—"}, ${
+              selectedTime
+                ? LEAD_TIME_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime
+                : "—"
+            } - ${contactName.trim() || ""}`}
+            readOnly
+          />
           <input type="hidden" name="appointment_date" value={selectedDateKey || ""} readOnly />
           <input type="hidden" name="appointment_time" value={selectedTime || ""} readOnly />
           <input type="hidden" name="vehicle_make" value={vehicleMake} readOnly />
@@ -758,6 +787,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
           <input type="hidden" name="vehicle_trim" value={vehicleTrim} readOnly />
           <input type="hidden" name="service_requested" value={serviceRequested} readOnly />
           <input type="hidden" name="issue_description" value={issueDescription} readOnly />
+          <input type="hidden" name="logo_url" value={`${window.location.origin}/images/ralph-sons-logo.png`} readOnly />
           <textarea name="message" readOnly className="lead-form__hidden" value={composedEmailBody} rows={1} />
 
           {step === 1 && (
@@ -868,7 +898,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
           {step === 2 && (
             <div className="lead-wizard__panel lead-wizard__panel--vehicle">
               <label className="lead-wizard__field--full">
-                <span>Select a service</span>
+                <span>Select a service<span className="required-star">*</span></span>
                 <select
                   value={serviceRequested}
                   onChange={(e) => setServiceRequested(e.target.value)}
@@ -894,7 +924,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
               </label>
               <div className="lead-wizard__vehicle-grid">
                 <label>
-                  <span>Year</span>
+                  <span>Year<span className="required-star">*</span></span>
                   <select
                     value={vehicleYear}
                     onChange={(e) => setVehicleYear(e.target.value)}
@@ -909,7 +939,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   </select>
                 </label>
                 <label>
-                  <span>Make</span>
+                  <span>Make<span className="required-star">*</span></span>
                   <select
                     value={vehicleMake}
                     onChange={(e) => setVehicleMake(e.target.value)}
@@ -924,7 +954,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   </select>
                 </label>
                 <label>
-                  <span>Model</span>
+                  <span>Model<span className="required-star">*</span></span>
                   <input
                     type="text"
                     autoComplete="off"
@@ -951,7 +981,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
           {step === 3 && (
             <div className="lead-wizard__panel">
               <label>
-                <span>Name</span>
+                <span>Name<span className="required-star">*</span></span>
                 <input
                   type="text"
                   name="user_name"
@@ -962,7 +992,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                 />
               </label>
               <label>
-                <span>Email</span>
+                <span>Email<span className="required-star">*</span></span>
                 <input
                   type="email"
                   name="user_email"
@@ -973,7 +1003,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                 />
               </label>
               <label>
-                <span>Phone</span>
+                <span>Phone<span className="required-star">*</span></span>
                 <input
                   type="tel"
                   name="user_phone"
@@ -1022,11 +1052,6 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
 
           {step < 3 && (
             <div className="lead-wizard__footer">
-              {step > 1 && (
-                <button type="button" className="lead-wizard__back" onClick={() => setStep((s) => s - 1)}>
-                  Back
-                </button>
-              )}
               <button
                 type="button"
                 className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"

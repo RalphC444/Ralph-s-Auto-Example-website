@@ -321,6 +321,11 @@ a {
   font-weight: 700;
 }
 
+.lead-form .required-star {
+  color: #dc2626;
+  margin-left: 0.15em;
+}
+
 .lead-form input,
 .lead-form textarea,
 .lead-form select {
@@ -358,14 +363,22 @@ a {
   margin-top: 0.35rem;
 }
 
+.lead-wizard__step-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+
 .lead-wizard__rail {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   list-style: none;
-  margin: 0 0 0.35rem;
+  margin: 0;
   padding: 0;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .lead-wizard__rail-dot {
@@ -380,8 +393,29 @@ a {
   transform: scale(1.15);
 }
 
+.lead-wizard__step-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  background: #f8fafc;
+  color: #1e3a5f;
+  width: 1.65rem;
+  height: 1.65rem;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.lead-wizard__step-back:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
 .lead-wizard__step-label {
-  margin: 0 0 0.65rem;
+  margin: 0;
   font-size: 0.82rem;
   font-weight: 700;
   color: #334155;
@@ -523,6 +557,7 @@ a {
 .lead-cal__weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  gap: 0.28rem;
   text-align: center;
   font-size: 0.68rem;
   font-weight: 700;
@@ -543,20 +578,24 @@ a {
 }
 
 .lead-cal__cell--empty {
-  min-height: 3rem;
+  aspect-ratio: 1;
+  max-width: 2.85rem;
 }
 
 .lead-cal__day {
   width: 100%;
-  max-width: 3rem;
+  max-width: 2.85rem;
   aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto;
   min-height: 0;
   border-radius: 50%;
   border: 1px solid transparent;
   background: #f1f5f9;
   font: inherit;
-  font-size: 1.02rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: #0f172a;
   cursor: pointer;
@@ -1392,18 +1431,29 @@ a {
   line-height: 1.5;
 }
 
+.booking-modal .lead-wizard__step-row {
+  justify-content: flex-start;
+  margin-bottom: 0.85rem;
+  gap: 0.45rem;
+}
+
+.booking-modal .lead-wizard__step-back {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-color: #c7d2e2;
+  color: #0b57d0;
+}
+
 .booking-modal .lead-wizard__step-label {
   text-align: left;
   font-size: 1.18rem;
   font-weight: 800;
   color: #0f2748;
   letter-spacing: -0.03em;
-  margin-bottom: 0.85rem;
 }
 
 .booking-modal .lead-wizard__rail {
-  justify-content: flex-start;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .booking-modal .lead-wizard__rail-dot {
@@ -1503,10 +1553,6 @@ a {
 .booking-modal .lead-wizard__next:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-}
-
-.booking-modal .lead-wizard__back {
-  color: #0b57d0;
 }
 
 .booking-modal .marketing-card__cta--dark {
