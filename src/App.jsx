@@ -360,9 +360,9 @@ const localBusinessSchema = {
   sameAs: [GOOGLE_REVIEW_URL],
 };
 
-const LEAD_TIME_SLOTS = (() => {
+function buildTimeSlots(endMinutes) {
   const slots = [];
-  for (let t = 8 * 60; t < 18 * 60; t += 30) {
+  for (let t = 8 * 60; t < endMinutes; t += 30) {
     const h = Math.floor(t / 60);
     const m = t % 60;
     const d = new Date(2000, 0, 1, h, m);
@@ -372,7 +372,17 @@ const LEAD_TIME_SLOTS = (() => {
     });
   }
   return slots;
-})();
+}
+
+const WEEKDAY_SLOTS = buildTimeSlots(17 * 60 + 30);
+const SATURDAY_SLOTS = buildTimeSlots(14 * 60);
+const ALL_SLOTS = WEEKDAY_SLOTS;
+
+function slotsForDateKey(dateKey) {
+  if (!dateKey) return WEEKDAY_SLOTS;
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay() === 6 ? SATURDAY_SLOTS : WEEKDAY_SLOTS;
+}
 
 function startOfToday() {
   const d = new Date();
@@ -584,11 +594,11 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
   const todayHasSlots = useMemo(() => {
     const now = new Date();
     const cutoff = now.getHours() * 60 + now.getMinutes() + 30;
-    return LEAD_TIME_SLOTS.some((slot) => {
+    return slotsForDateKey(todayKey).some((slot) => {
       const [h, m] = slot.value.split(":").map(Number);
       return h * 60 + m > cutoff;
     });
-  }, []);
+  }, [todayKey]);
 
   const anchorStart = firstDayOfMonth(monthAnchor);
   const currentMonthStart = firstDayOfMonth(new Date());
@@ -598,7 +608,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
 
   const composedEmailBody = useMemo(() => {
     const timeLabel = selectedTime
-      ? LEAD_TIME_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime
+      ? ALL_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime
       : "";
     return [
       `${SHOP_NAME} — appointment request`,
@@ -815,7 +825,6 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
   useEffect(() => {
     let cancelled = false;
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const totalSlots = LEAD_TIME_SLOTS.length;
     const keys = [];
     for (let d = 1; d <= daysInMonth; d++) {
       if (isClosedWeekday(year, month, d)) continue;
@@ -838,8 +847,9 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
         if (!data?.slots) return;
         const key = keys[i];
         const isToday = key === todayKey;
+        const daySlots = slotsForDateKey(key);
         let availableCount = 0;
-        for (const slot of LEAD_TIME_SLOTS) {
+        for (const slot of daySlots) {
           if (isToday) {
             const now = new Date();
             const cutoff = now.getHours() * 60 + now.getMinutes() + 30;
@@ -923,7 +933,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
             name="title"
             value={`${selectedDateKey ? formatDateKeyMMDDYYYY(selectedDateKey) : "—"}, ${
               selectedTime
-                ? LEAD_TIME_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime
+                ? ALL_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime
                 : "—"
             } - ${contactName.trim() || ""}`}
             readOnly
@@ -1037,9 +1047,9 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   {selectedDateKey ? (
                     <div className="lead-times" ref={leadTimesRef} aria-live="polite">
                       <p className="lead-times__heading">{selectedDateLabel}</p>
-                      <p className="lead-times__hint">Shop hours Mon–Sat · pick a start time</p>
+                      <p className="lead-times__hint">{selectedDateKey && parseDateKey(selectedDateKey).getDay() === 6 ? "Saturday 8 AM – 2 PM" : "Mon–Fri 8 AM – 5:30 PM"} · pick a start time</p>
                       <div className="lead-times__slots" aria-label="Available start times">
-                        {LEAD_TIME_SLOTS.map((slot) => {
+                        {slotsForDateKey(selectedDateKey).map((slot) => {
                           const isOn = selectedTime === slot.value;
                           const isSelectedToday = selectedDateKey === todayKey;
                           let isPast = false;
@@ -1175,7 +1185,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
-                  })} · {LEAD_TIME_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime}
+                  })} · {ALL_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime}
                   <br />
                   <strong>Service:</strong> {serviceRequested || "—"}
                   <br />
@@ -1226,7 +1236,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                       weekday: "short",
                       month: "short",
                       day: "numeric",
-                    })} · ${LEAD_TIME_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime}`
+                    })} · ${ALL_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime}`
                   : "—"}
                 <br />
                 <strong>Service:</strong> {serviceRequested || "—"}
@@ -2292,8 +2302,8 @@ export default function App() {
             </section>
             <section className="hours-preview hours-preview--desktop" aria-label="Shop hours">
               <p className="hours-preview__label">Hours</p>
-              <p>Mon - Fri: 7:30 AM - 6:30 PM</p>
-              <p>Saturday: 8:00 AM - 2:00 PM</p>
+              <p>Mon – Fri: 8 AM – 5:30 PM</p>
+              <p>Saturday: 8 AM – 2 PM</p>
               <p>Sunday: Closed</p>
             </section>
             <CardsFooter className="cards-footer--desktop" />
