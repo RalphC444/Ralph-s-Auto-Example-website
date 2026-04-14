@@ -362,7 +362,7 @@ const localBusinessSchema = {
 
 const LEAD_TIME_SLOTS = (() => {
   const slots = [];
-  for (let t = 8 * 60; t < 17 * 60; t += 30) {
+  for (let t = 8 * 60; t < 18 * 60; t += 30) {
     const h = Math.floor(t / 60);
     const m = t % 60;
     const d = new Date(2000, 0, 1, h, m);
@@ -1258,7 +1258,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   })}
                   target="_blank"
                   rel="noreferrer"
-                  className="marketing-card__cta lead-wizard__next lead-wizard__cal-btn--user"
+                  className="marketing-card__cta marketing-card__cta--secondary lead-wizard__next"
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
