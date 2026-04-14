@@ -204,7 +204,7 @@ const cards = [
     id: 2,
     type: "text",
     variant: "minimal",
-    title: "What local customers say",
+    title: "What Local Customers Say",
     body: "Real feedback from local drivers who trust us with their vehicles.",
     googleRating: "4.8/5",
     reviews: CUSTOMER_REVIEWS,
@@ -213,7 +213,7 @@ const cards = [
     id: 3,
     type: "text",
     variant: "bright",
-    title: "Some of the repair services we offer include:",
+    title: "Repair Services We Offer:",
     body: "From diagnostics to major repairs, our team keeps Mount Vernon drivers safe and on schedule.",
     points: [
       "Power Windows & Doors",
@@ -235,17 +235,6 @@ const cards = [
     id: 4,
     type: "image",
     mediaType: "image",
-    mediaSrc: "/images/shop-3.png",
-    variant: "engage",
-    title: "Major repairs handled with quality workmanship",
-    body: "From engine and transmission concerns to brake and suspension work, we focus on long-term fixes you can trust.",
-    metric: "40+",
-    metricLabel: "years trusted",
-  },
-  {
-    id: 5,
-    type: "image",
-    mediaType: "image",
     mediaSrc: "/images/shop-1.png",
     variant: "scale",
     title: "Meet Ralph",
@@ -254,11 +243,22 @@ const cards = [
     offerDetail: "Local · Honest · Experienced",
   },
   {
+    id: 5,
+    type: "image",
+    mediaType: "image",
+    mediaSrc: "/images/shop-3.png",
+    variant: "engage",
+    title: "Major repairs handled with quality workmanship",
+    body: "From engine and transmission concerns to brake and suspension work, we focus on long-term fixes you can trust.",
+    metric: "40+",
+    metricLabel: "Years Trusted",
+  },
+  {
     id: 6,
     type: "text",
     variant: "map",
     title: "Find us in Mount Vernon",
-    body: "Easy drop-off access near Fleetwood with quick routes from Yonkers, Bronxville, and nearby neighborhoods.",
+    body: "Easy drop-off access near Fleetwood Train Station.",
     cta: "Open in Google Maps",
     ctaLink: SHOP_MAP_URL,
   },
@@ -412,11 +412,34 @@ function parseDateKey(key) {
 
 function formatDateKeyMMDDYYYY(key) {
   const [y, m, d] = key.split("-");
-  return `${m}/${d}/${y}`;
+  return `${m}-${d}-${y}`;
 }
 
 function isClosedWeekday(year, month, day) {
   return new Date(year, month, day).getDay() === 0;
+}
+
+function buildGoogleCalendarUrl({ title, dateKey, timeValue, durationMinutes = 60, description, location }) {
+  const [y, mo, d] = dateKey.split("-").map(Number);
+  const [h, m] = timeValue.split(":").map(Number);
+  const start = new Date(y, mo - 1, d, h, m);
+  const end = new Date(start.getTime() + durationMinutes * 60_000);
+  const fmt = (dt) =>
+    dt.getFullYear().toString() +
+    String(dt.getMonth() + 1).padStart(2, "0") +
+    String(dt.getDate()).padStart(2, "0") +
+    "T" +
+    String(dt.getHours()).padStart(2, "0") +
+    String(dt.getMinutes()).padStart(2, "0") +
+    "00";
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: title,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    details: description,
+    location: location || "",
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
 function prefersReducedMotion() {
@@ -541,6 +564,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
   const [step, setStep] = useState(1);
   const [monthAnchor, setMonthAnchor] = useState(() => firstDayOfMonth(new Date()));
   const [selectedDateKey, setSelectedDateKey] = useState(null);
+  const [calCollapsed, setCalCollapsed] = useState(false);
   const [selectedTime, setSelectedTime] = useState(null);
   const [vehicleMake, setVehicleMake] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
@@ -553,6 +577,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
   const [contactPhone, setContactPhone] = useState("");
 
   const today = startOfToday();
+  const todayKey = dateKeyFromParts(today.getFullYear(), today.getMonth(), today.getDate());
   const anchorStart = firstDayOfMonth(monthAnchor);
   const currentMonthStart = firstDayOfMonth(new Date());
   const canGoPrev = anchorStart > currentMonthStart;
@@ -677,9 +702,24 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
         publicKey: EMAILJS_PUBLIC_KEY,
       });
       setSubmitStatus("sent");
-      window.setTimeout(() => {
-        onSubmitted?.();
-      }, 1800);
+
+      fetch("/api/create-calendar-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dateKey: selectedDateKey,
+          timeValue: selectedTime,
+          contactName,
+          contactEmail,
+          contactPhone,
+          serviceRequested,
+          issueDescription,
+          vehicleYear,
+          vehicleMake,
+          vehicleModel,
+          vehicleTrim,
+        }),
+      }).catch(() => {});
     } catch (err) {
       const msg =
         (typeof err?.text === "string" && err.text) ||
@@ -719,6 +759,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
     const key = dateKeyFromParts(year, month, day);
     setSelectedDateKey(key);
     setSelectedTime(null);
+    if (window.innerWidth < 768) setCalCollapsed(true);
   };
 
   return (
@@ -800,7 +841,19 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   }`}
                 >
                   <div className="lead-schedule__calendar" ref={calendarColRef}>
-                    <div className="lead-cal">
+                    {selectedDateKey && calCollapsed && (
+                      <button
+                        type="button"
+                        className="lead-cal-toggle"
+                        onClick={() => setCalCollapsed(false)}
+                      >
+                        <span className="lead-cal-toggle__label">
+                          {selectedDateLabel} <span className="lead-cal-toggle__change">Change date</span>
+                        </span>
+                        <span className="lead-cal-toggle__icon" aria-hidden="true">▼</span>
+                      </button>
+                    )}
+                    <div className={`lead-cal${calCollapsed && selectedDateKey ? " lead-cal--collapsed" : ""}`}>
                       <div className="lead-cal__head">
                         <button
                           type="button"
@@ -846,6 +899,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                                 new Date(year, month, day) < today;
                               const key = dateKeyFromParts(year, month, day);
                               const isSelected = selectedDateKey === key;
+                              const isToday = key === todayKey;
                               const isAvailable = !disabled && !isSelected;
                               return (
                                 <button
@@ -855,7 +909,8 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                                   disabled={disabled}
                                   className={`lead-cal__day${isSelected ? " is-selected" : ""}${
                                     isAvailable ? " is-available" : ""
-                                  }`}
+                                  }${isToday ? " is-today" : ""}`}
+                                  title={isToday ? "Today" : undefined}
                                   onClick={() => selectDay(day)}
                                 >
                                   {day}
@@ -876,6 +931,15 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                       <div className="lead-times__slots" aria-label="Available start times">
                         {LEAD_TIME_SLOTS.map((slot) => {
                           const isOn = selectedTime === slot.value;
+                          const isSelectedToday = selectedDateKey === todayKey;
+                          let isPast = false;
+                          if (isSelectedToday) {
+                            const now = new Date();
+                            const cutoff = now.getHours() * 60 + now.getMinutes() + 30;
+                            const [slotH, slotM] = slot.value.split(":").map(Number);
+                            isPast = slotH * 60 + slotM <= cutoff;
+                          }
+                          if (isPast) return null;
                           return (
                             <button
                               key={slot.value}
@@ -1031,36 +1095,75 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                 <strong>Vehicle:</strong> {vehicleYear} {vehicleMake} {vehicleModel}
                 {vehicleTrim ? ` · ${vehicleTrim}` : ""}
               </p>
-              {submitError && (
-                <p className="lead-form__status lead-form__status--error" role="alert">
-                  {submitError}
-                </p>
-              )}
-              {submitStatus === "sent" && (
-                <p className="lead-form__status lead-form__status--ok" role="status">
-                  Request sent. We will be in touch soon.
-                </p>
-              )}
-              <button
-                type="submit"
-                className="marketing-card__cta marketing-card__cta--dark"
-                disabled={!step3Complete || submitStatus === "sending" || submitStatus === "sent"}
-              >
-                {submitStatus === "sending" ? "Sending…" : submitStatus === "sent" ? "Sent" : "Submit request"}
-              </button>
+              {submitStatus === "sent" ? (
+                <div className="lead-wizard__confirmation">
+                  <p className="lead-form__status lead-form__status--ok" role="status">
+                    Request sent! We will be in touch soon.
+                  </p>
+                  <div className="lead-wizard__cal-links">
+                    <a
+                      href={buildGoogleCalendarUrl({
+                        title: `${serviceRequested || "Appointment"} — ${SHOP_NAME}`,
+                        dateKey: selectedDateKey,
+                        timeValue: selectedTime,
+                        description: [
+                          `Service: ${serviceRequested}`,
+                          issueDescription.trim() ? `Issue: ${issueDescription.trim()}` : "",
+                          `Vehicle: ${vehicleYear} ${vehicleMake} ${vehicleModel}${vehicleTrim ? ` (${vehicleTrim})` : ""}`,
+                          "",
+                          `Contact: ${contactName} · ${contactEmail} · ${contactPhone}`,
+                        ].filter(Boolean).join("\n"),
+                        location: SHOP_ADDRESS,
+                      })}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="lead-wizard__cal-btn lead-wizard__cal-btn--user"
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                        <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
+                        <path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      </svg>
+                      Add to your calendar
+                    </a>
+                  </div>
+                  <button
+                    type="button"
+                    className="lead-wizard__cal-done"
+                    onClick={() => onSubmitted?.()}
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : null}
             </div>
           )}
 
-          {step < 3 && (
+          {submitStatus !== "sent" && (
             <div className="lead-wizard__footer">
-              <button
-                type="button"
-                className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
-                disabled={(step === 1 && !step1Complete) || (step === 2 && !step2Complete)}
-                onClick={() => setStep((s) => s + 1)}
-              >
-                Continue
-              </button>
+              {step === 3 && submitError && (
+                <p className="lead-form__status lead-form__status--error lead-wizard__footer-error" role="alert">
+                  {submitError}
+                </p>
+              )}
+              {step < 3 ? (
+                <button
+                  type="button"
+                  className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
+                  disabled={(step === 1 && !step1Complete) || (step === 2 && !step2Complete)}
+                  onClick={() => setStep((s) => s + 1)}
+                >
+                  Continue
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
+                  disabled={!step3Complete || submitStatus === "sending"}
+                >
+                  {submitStatus === "sending" ? "Sending…" : "Submit request"}
+                </button>
+              )}
             </div>
           )}
         </form>
@@ -1795,25 +1898,24 @@ export default function App() {
     setIsBookingModalOpen(true);
   };
   const closeBookingModal = () => setIsBookingModalOpen(false);
+  useEffect(() => {
+    resetScrollToTop();
+    requestAnimationFrame(resetScrollToTop);
+  }, [activePage]);
+
   const openServicesPage = (source = "link") => {
     servicesEntrySourceRef.current = source;
     setEnableServicesMobileDetailsPreview(source === "nav");
     window.location.hash = "services";
     setActivePage("services");
-    resetScrollToTop();
-    requestAnimationFrame(resetScrollToTop);
   };
   const openReviewsPage = () => {
     window.location.hash = "reviews";
     setActivePage("reviews");
-    resetScrollToTop();
-    requestAnimationFrame(resetScrollToTop);
   };
   const openHomePage = () => {
     window.location.hash = "";
     setActivePage("home");
-    resetScrollToTop();
-    requestAnimationFrame(resetScrollToTop);
   };
 
   useEffect(() => {
@@ -1973,7 +2075,7 @@ export default function App() {
             openHomePage();
           }}
         >
-          <img src="/images/ralph-sons-logo.svg" alt="Ralph and Sons logo" className="logo__img" />
+          <img src="/images/ralph-sons-logo.svg?v=2" alt="Ralph and Sons logo" className="logo__img" />
         </a>
         <nav className="top-nav" aria-label="Header actions">
           <a

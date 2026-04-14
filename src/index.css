@@ -523,6 +523,54 @@ a {
   background: #fff;
 }
 
+/* ── Collapsible calendar toggle (mobile only) ── */
+.lead-cal-toggle {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .lead-cal-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #dbe2ee;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    font: inherit;
+    margin-bottom: 0.5rem;
+  }
+
+  .lead-cal-toggle__label {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #0f172a;
+  }
+
+  .lead-cal-toggle__change {
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--primary);
+    margin-left: 0.5rem;
+  }
+
+  .lead-cal-toggle__icon {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    transition: transform 0.25s ease;
+  }
+
+  .lead-cal--collapsed {
+    display: none;
+  }
+
+  .lead-cal--collapsed + .lead-schedule__tz {
+    display: none;
+  }
+}
+
 .lead-cal__head {
   display: flex;
   align-items: center;
@@ -599,6 +647,23 @@ a {
   font-weight: 600;
   color: #0f172a;
   cursor: pointer;
+}
+
+.lead-cal__day.is-today:not(.is-selected) {
+  font-weight: 800;
+  position: relative;
+}
+
+.lead-cal__day.is-today:not(.is-selected)::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
 }
 
 .lead-cal__day:hover:not(:disabled) {
@@ -707,6 +772,61 @@ a {
 
 .lead-wizard__next {
   min-width: 8.5rem;
+}
+
+.lead-wizard__confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  text-align: center;
+}
+
+.lead-wizard__cal-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lead-wizard__cal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.lead-wizard__cal-btn--user {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.lead-wizard__cal-btn--user:hover {
+  background: #bfdbfe;
+}
+
+.lead-wizard__cal-done {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.35rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lead-wizard__cal-done:hover {
+  color: #334155;
 }
 
 .lead-wizard__recap {
@@ -1531,7 +1651,12 @@ a {
   border-top-color: #e2e8f0;
   margin-top: 0.85rem;
   padding-top: 0.65rem;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+}
+
+.lead-wizard__footer-error {
+  flex-basis: 100%;
+  margin: 0 0 0.5rem;
 }
 
 .booking-modal .lead-wizard__next {
@@ -2191,11 +2316,6 @@ a {
     max-width: none;
   }
 
-  .hero__actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .marketing-card--image {
     display: block;
     padding: 0;
@@ -2243,7 +2363,6 @@ a {
     z-index: 2;
   }
 
-  .hero__actions a,
   .marketing-card__cta,
   .card-actions .text-link {
     width: 100%;
@@ -2254,6 +2373,7 @@ a {
   .hero__actions .hero__cta,
   .reviews-list__mobile-actions .reviews-list__cta,
   .reviews-list__mobile-actions .reviews-list__view-all,
+  .reviews-page-view__actions .reviews-list__cta,
   .services-page-view__book-actions .marketing-card__cta,
   .services-page-view__book-actions .services-page-view__book-view-all {
     min-height: 52px;
@@ -2520,40 +2640,103 @@ a {
 
 @media (min-width: 768px) and (max-width: 1199px) {
   .hero__actions {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .hero__actions .hero__cta {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .reviews-list__mobile-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .reviews-list__mobile-actions .reviews-list__cta,
+  .reviews-list__mobile-actions .reviews-list__view-all {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .services-page-view__book-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .services-page-view__book-section .marketing-card__cta,
+  .services-page-view__book-view-all {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .reviews-page-view__actions .reviews-list__cta,
+  .reviews-page-view__book-row .marketing-card__cta {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero__actions {
     flex-direction: column;
     align-items: stretch;
   }
 
   .hero__actions .hero__cta {
     width: 100%;
-    min-width: 0;
+    justify-content: center;
+    text-align: center;
   }
 
   .reviews-list__mobile-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .reviews-list__mobile-actions .reviews-list__cta,
   .reviews-list__mobile-actions .reviews-list__view-all {
-    width: auto;
-    min-width: 240px;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
   }
 
-  .services-page-view__book-actions {
-    flex-direction: row;
-    align-items: center;
+  .booking-modal {
+    padding: 0;
   }
 
-  .services-page-view__book-section .marketing-card__cta,
-  .services-page-view__book-view-all {
-    width: auto;
-    min-width: 220px;
+  .booking-modal__panel {
+    width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
   }
 
-  .reviews-page-view__actions .reviews-list__cta,
-  .reviews-page-view__book-row .marketing-card__cta {
-    width: auto;
-    min-width: 220px;
+  .booking-modal__scroll {
+    padding-bottom: 0;
+  }
+
+  .booking-modal .lead-wizard__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: #fff;
+    margin: 0;
+    padding: 0.75rem 1.1rem;
+    border-top: 1px solid #e2e8f0;
   }
 }
