@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@netlify/blobs": "^10.7.4",
     "googleapis": "^171.4.0",
     "gsap": "^3.15.0",
     "react": "^19.0.0",

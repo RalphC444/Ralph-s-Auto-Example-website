@@ -289,49 +289,49 @@ const serviceDetails = [
   },
   {
     title: "Brake Repair",
-    startingPrice: "Starting at $129",
+    startingPrice: "Request a Quote",
     symptoms: ["Squealing or grinding noises", "Soft brake pedal", "Longer stopping distance"],
     included: ["Brake inspection", "Pad/rotor recommendations", "Road test and safety check"],
   },
   {
     title: "Engine Diagnostics",
-    startingPrice: "Starting at $89",
+    startingPrice: "Request a Quote",
     symptoms: ["Check engine light is on", "Rough idle or stalling", "Loss of power or hesitation"],
     included: ["Computer code scan", "System testing", "Clear repair plan with estimate"],
   },
   {
     title: "Suspension & Steering",
-    startingPrice: "Starting at $129",
+    startingPrice: "Request a Quote",
     symptoms: ["Vehicle pulling to one side", "Bumpy or unstable ride", "Steering feels loose"],
     included: ["Steering and suspension check", "Component wear assessment", "Repair estimate and alignment guidance"],
   },
   {
     title: "Battery & Charging System",
-    startingPrice: "Starting at $79",
+    startingPrice: "Request a Quote",
     symptoms: ["Slow engine crank", "Battery warning light", "Electrical accessories cutting out"],
     included: ["Battery and alternator testing", "Terminal and cable inspection", "Replacement recommendations"],
   },
   {
     title: "Cooling System Service",
-    startingPrice: "Starting at $109",
+    startingPrice: "Request a Quote",
     symptoms: ["Temperature gauge running hot", "Coolant leaks under vehicle", "Heater not working properly"],
     included: ["Cooling pressure test", "Radiator and hose inspection", "Coolant service recommendations"],
   },
   {
     title: "Transmission Service",
-    startingPrice: "Starting at $149",
+    startingPrice: "Request a Quote",
     symptoms: ["Delayed gear engagement", "Hard shifting", "Transmission fluid leak"],
     included: ["Fluid condition inspection", "System performance check", "Service/repair recommendations"],
   },
   {
     title: "A/C & Heating Repair",
-    startingPrice: "Starting at $99",
+    startingPrice: "Request a Quote",
     symptoms: ["Weak airflow", "Warm air from A/C vents", "No cabin heat in cold weather"],
     included: ["HVAC system diagnostics", "Leak and pressure checks", "Repair quote with parts options"],
   },
   {
     title: "Exhaust & Muffler Repair",
-    startingPrice: "Starting at $119",
+    startingPrice: "Request a Quote",
     symptoms: ["Loud exhaust noise", "Rattling under vehicle", "Reduced fuel efficiency"],
     included: ["Exhaust leak diagnostics", "Muffler and pipe inspection", "Repair/replacement options"],
   },
@@ -566,6 +566,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
   const [selectedDateKey, setSelectedDateKey] = useState(null);
   const [calCollapsed, setCalCollapsed] = useState(false);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [slotAvailability, setSlotAvailability] = useState({});
   const [vehicleMake, setVehicleMake] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
@@ -698,10 +699,34 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
     setSubmitError(null);
     setSubmitStatus("sending");
     try {
+      const reserveRes = await fetch("/api/record-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dateKey: selectedDateKey, timeValue: selectedTime }),
+      }).catch(() => null);
+
+      if (reserveRes && reserveRes.status === 409) {
+        const err409 = await reserveRes.json().catch(() => ({}));
+        setSlotAvailability((prev) => ({
+          ...prev,
+          [selectedTime]: { booked: 2, remaining: 0 },
+        }));
+        setSelectedTime(null);
+        setSubmitError(err409.error || "This time slot was just booked. Please pick another time.");
+        setSubmitStatus("error");
+        setStep(1);
+        return;
+      }
+
       await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, leadFormRef.current, {
         publicKey: EMAILJS_PUBLIC_KEY,
       });
       setSubmitStatus("sent");
+
+      setSlotAvailability((prev) => {
+        const cur = prev[selectedTime]?.booked || 0;
+        return { ...prev, [selectedTime]: { booked: cur + 1, remaining: Math.max(0, 1 - cur) } };
+      });
 
       fetch("/api/create-calendar-event", {
         method: "POST",
@@ -749,6 +774,23 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
     contactName.trim().length > 0 &&
     contactEmail.trim().length > 0 &&
     contactPhone.trim().length > 0;
+
+  useEffect(() => {
+    if (!selectedDateKey) {
+      setSlotAvailability({});
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/get-slot-availability?date=${selectedDateKey}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!cancelled && data?.slots) setSlotAvailability(data.slots);
+      })
+      .catch(() => {
+        if (!cancelled) setSlotAvailability({});
+      });
+    return () => { cancelled = true; };
+  }, [selectedDateKey]);
 
   const selectDay = (day) => {
     if (day == null) return;
@@ -940,15 +982,21 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                             isPast = slotH * 60 + slotM <= cutoff;
                           }
                           if (isPast) return null;
+                          const avail = slotAvailability[slot.value];
+                          const booked = avail?.booked || 0;
+                          const isFull = booked >= 2;
+                          const lastSpot = booked === 1;
+                          if (isFull) return null;
                           return (
                             <button
                               key={slot.value}
                               type="button"
                               aria-pressed={isOn}
-                              className={`lead-times__slot${isOn ? " is-selected" : ""}`}
+                              className={`lead-times__slot${isOn ? " is-selected" : ""}${lastSpot ? " is-limited" : ""}`}
                               onClick={() => setSelectedTime(slot.value)}
                             >
                               {slot.label}
+                              {lastSpot && <span className="lead-times__badge lead-times__badge--last">1 spot left</span>}
                             </button>
                           );
                         })}
@@ -1127,45 +1175,48 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                       Add to your calendar
                     </a>
                   </div>
-                  <button
-                    type="button"
-                    className="lead-wizard__cal-done"
-                    onClick={() => onSubmitted?.()}
-                  >
-                    Done
-                  </button>
                 </div>
               ) : null}
             </div>
           )}
 
-          {submitStatus !== "sent" && (
-            <div className="lead-wizard__footer">
-              {step === 3 && submitError && (
-                <p className="lead-form__status lead-form__status--error lead-wizard__footer-error" role="alert">
-                  {submitError}
-                </p>
-              )}
-              {step < 3 ? (
-                <button
-                  type="button"
-                  className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
-                  disabled={(step === 1 && !step1Complete) || (step === 2 && !step2Complete)}
-                  onClick={() => setStep((s) => s + 1)}
-                >
-                  Continue
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
-                  disabled={!step3Complete || submitStatus === "sending"}
-                >
-                  {submitStatus === "sending" ? "Sending…" : "Submit request"}
-                </button>
-              )}
-            </div>
-          )}
+          <div className="lead-wizard__footer">
+            {submitStatus === "sent" ? (
+              <button
+                type="button"
+                className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
+                onClick={() => onSubmitted?.()}
+              >
+                Done
+              </button>
+            ) : (
+              <>
+                {step === 3 && submitError && (
+                  <p className="lead-form__status lead-form__status--error lead-wizard__footer-error" role="alert">
+                    {submitError}
+                  </p>
+                )}
+                {step < 3 ? (
+                  <button
+                    type="button"
+                    className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
+                    disabled={(step === 1 && !step1Complete) || (step === 2 && !step2Complete)}
+                    onClick={() => setStep((s) => s + 1)}
+                  >
+                    Continue
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
+                    disabled={!step3Complete || submitStatus === "sending"}
+                  >
+                    {submitStatus === "sending" ? "Sending…" : "Submit request"}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </form>
       </div>
     </div>
@@ -1411,6 +1462,9 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
             referrerPolicy="no-referrer-when-downgrade"
           />
         </div>
+        <p className="marketing-card__notice">
+          <strong>Note:</strong> Ralph is no longer located at SLR Auto Repair in White Plains. Our only location is here in Fleetwood, Mount Vernon.
+        </p>
         {section.cta && (
           <a
             href={section.ctaLink || SHOP_MAP_URL}
@@ -1656,7 +1710,9 @@ function ServicesPage({ onGoHome, onOpenBooking, onOpenReviewsPage, enableMobile
               <article key={service.title} className="services-page-view__detail-card">
                 <div className="services-page-view__detail-head">
                   <h3>{service.title}</h3>
-                  <span>{service.startingPrice}</span>
+                  <span className={service.startingPrice === "Request a Quote" ? "services-page-view__badge--quote" : ""}>
+                    {service.startingPrice}
+                  </span>
                 </div>
                 <div className="services-page-view__detail-lists">
                   <div>
