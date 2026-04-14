@@ -7,7 +7,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const GOOGLE_REVIEW_URL =
   "https://www.google.com/search?sca_esv=27b04becbc364c98&sxsrf=ANbL-n4oMV1KYl6tcLAKfLFnkveXAywSzw:1776101633257&si=AL3DRZHrmvnFAVQPOO2Bzhf8AX9KZZ6raUI_dT7DG_z0kV2_xyU4POkNzp832qcDkBKyg_-4oqT-5XzwWMPvtiH_sjSuYhkBPRwu_bKStKoT6awuf-Yq2fcHmVKX7woOQKyr7_Ug_eRV&q=Ralph+and+Sons+Reviews&sa=X&ved=2ahUKEwj3rr2XruuTAxW-MWIAHRr_KB0Q0bkNegQIIRAF&biw=1728&bih=972&dpr=2";
-const SHOP_NAME = "Ralph & Sons Auto Repair";
+const SHOP_NAME = "Ralph & Son Auto Repair";
 const SHOP_PHONE = "(914) 776-5331";
 const SHOP_PHONE_HREF = "tel:9147765331";
 const SHOP_ADDRESS = "701 N Macquesten Pkwy, Mount Vernon, NY 10552";
@@ -266,7 +266,7 @@ const cards = [
     type: "text",
     variant: "dark",
     title: "Honest shop. Exceptional customer service.",
-    body: "Customers choose Ralph & Sons because we communicate clearly, price fairly, and stand behind our work.",
+    body: "Customers choose Ralph & Son because we communicate clearly, price fairly, and stand behind our work.",
     points: ["No surprise charges", "Repair options explained", "Community-trusted service"],
     price: "Free",
     period: "estimates",
@@ -1567,7 +1567,7 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
         </div>
         <div className="marketing-card__map-wrap">
           <iframe
-            title="Ralph and Sons Auto Repair map widget"
+            title="Ralph and Son Auto Repair map widget"
             src={SHOP_MAP_EMBED_URL}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
@@ -1919,7 +1919,7 @@ function ServicesPage({ onGoHome, onOpenBooking, onOpenReviewsPage, enableMobile
         <div className="services-page-view__local-grid">
           <div className="services-page-view__map-wrap">
             <iframe
-              title="Ralph and Sons Auto Repair map"
+              title="Ralph and Son Auto Repair map"
               src="https://maps.google.com/maps?q=701%20N%20Macquesten%20Pkwy%20Mount%20Vernon%20NY%2010552&output=embed"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -1959,7 +1959,7 @@ function ReviewsPage({ onGoHome, onOpenBooking }) {
             What our customers are saying
           </h1>
           <p className="services-page-view__intro">
-            Trusted feedback from local drivers who rely on Ralph & Sons for honest, high-quality service.
+            Trusted feedback from local drivers who rely on Ralph & Son for honest, high-quality service.
           </p>
         </div>
         <div className="reviews-page-view__meta-card">
@@ -2229,7 +2229,7 @@ export default function App() {
             openHomePage();
           }}
         >
-          <img src="/images/ralph-sons-logo.svg?v=2" alt="Ralph and Sons logo" className="logo__img" />
+          <img src="/images/ralph-sons-logo.svg?v=2" alt="Ralph and Son logo" className="logo__img" />
         </a>
         <nav className="top-nav" aria-label="Header actions">
           <a
