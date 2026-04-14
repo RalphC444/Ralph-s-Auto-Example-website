@@ -780,21 +780,25 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
     contactPhone.trim().length > 0;
 
   useEffect(() => {
-    if (!selectedDateKey) {
-      setSlotAvailability({});
-      return;
-    }
+    if (!selectedDateKey || step !== 1) return;
     let cancelled = false;
     fetch(`/api/get-slot-availability?date=${selectedDateKey}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (!cancelled && data?.slots) setSlotAvailability(data.slots);
+        if (cancelled) return;
+        if (data?.slots) {
+          setSlotAvailability(data.slots);
+          if (selectedTime) {
+            const info = data.slots[selectedTime];
+            if (info && info.booked >= 2) setSelectedTime(null);
+          }
+        }
       })
       .catch(() => {
         if (!cancelled) setSlotAvailability({});
       });
     return () => { cancelled = true; };
-  }, [selectedDateKey]);
+  }, [selectedDateKey, step]);
 
   const selectDay = (day) => {
     if (day == null) return;
