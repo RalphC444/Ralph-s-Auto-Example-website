@@ -725,7 +725,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
 
       setSlotAvailability((prev) => {
         const cur = prev[selectedTime]?.booked || 0;
-        return { ...prev, [selectedTime]: { booked: cur + 1, remaining: Math.max(0, 1 - cur) } };
+        return { ...prev, [selectedTime]: { booked: cur + 1, remaining: Math.max(0, 2 - cur - 1) } };
       });
 
       fetch("/api/create-calendar-event", {
@@ -1091,7 +1091,57 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 3 && submitStatus === "sent" ? (
+            <div className="lead-wizard__panel lead-wizard__panel--confirmation">
+              <div className="lead-wizard__confirmation">
+                <svg className="lead-wizard__confirmation-icon" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true">
+                  <circle cx="24" cy="24" r="22" fill="#dcfce7" stroke="#22c55e" strokeWidth="2" />
+                  <path d="M14 25l7 7 13-13" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="lead-form__status lead-form__status--ok" role="status">
+                  Request sent! We will be in touch soon.
+                </p>
+                <p className="lead-wizard__recap">
+                  <strong>Requested time:</strong>{" "}
+                  {parseDateKey(selectedDateKey).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })} · {LEAD_TIME_SLOTS.find((s) => s.value === selectedTime)?.label || selectedTime}
+                  <br />
+                  <strong>Service:</strong> {serviceRequested || "—"}
+                  <br />
+                  <strong>Vehicle:</strong> {vehicleYear} {vehicleMake} {vehicleModel}
+                  {vehicleTrim ? ` · ${vehicleTrim}` : ""}
+                </p>
+                <a
+                  href={buildGoogleCalendarUrl({
+                    title: `${serviceRequested || "Appointment"} — ${SHOP_NAME}`,
+                    dateKey: selectedDateKey,
+                    timeValue: selectedTime,
+                    description: [
+                      `Service: ${serviceRequested}`,
+                      issueDescription.trim() ? `Issue: ${issueDescription.trim()}` : "",
+                      `Vehicle: ${vehicleYear} ${vehicleMake} ${vehicleModel}${vehicleTrim ? ` (${vehicleTrim})` : ""}`,
+                      "",
+                      `Contact: ${contactName} · ${contactEmail} · ${contactPhone}`,
+                    ].filter(Boolean).join("\n"),
+                    location: SHOP_ADDRESS,
+                  })}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lead-wizard__cal-btn lead-wizard__cal-btn--user"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                    <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
+                    <path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  Add to your calendar
+                </a>
+              </div>
+            </div>
+          ) : step === 3 ? (
             <div className="lead-wizard__panel">
               <label>
                 <span>Name<span className="required-star">*</span></span>
@@ -1143,42 +1193,8 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                 <strong>Vehicle:</strong> {vehicleYear} {vehicleMake} {vehicleModel}
                 {vehicleTrim ? ` · ${vehicleTrim}` : ""}
               </p>
-              {submitStatus === "sent" ? (
-                <div className="lead-wizard__confirmation">
-                  <p className="lead-form__status lead-form__status--ok" role="status">
-                    Request sent! We will be in touch soon.
-                  </p>
-                  <div className="lead-wizard__cal-links">
-                    <a
-                      href={buildGoogleCalendarUrl({
-                        title: `${serviceRequested || "Appointment"} — ${SHOP_NAME}`,
-                        dateKey: selectedDateKey,
-                        timeValue: selectedTime,
-                        description: [
-                          `Service: ${serviceRequested}`,
-                          issueDescription.trim() ? `Issue: ${issueDescription.trim()}` : "",
-                          `Vehicle: ${vehicleYear} ${vehicleMake} ${vehicleModel}${vehicleTrim ? ` (${vehicleTrim})` : ""}`,
-                          "",
-                          `Contact: ${contactName} · ${contactEmail} · ${contactPhone}`,
-                        ].filter(Boolean).join("\n"),
-                        location: SHOP_ADDRESS,
-                      })}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="lead-wizard__cal-btn lead-wizard__cal-btn--user"
-                    >
-                      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                        <rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                        <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
-                        <path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                      </svg>
-                      Add to your calendar
-                    </a>
-                  </div>
-                </div>
-              ) : null}
             </div>
-          )}
+          ) : null}
 
           <div className="lead-wizard__footer">
             {submitStatus === "sent" ? (
@@ -1452,8 +1468,22 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
   if (section.variant === "map") {
     return (
       <div className="marketing-card marketing-card--text marketing-card--map">
-        <h3 className="marketing-card__title">{section.title}</h3>
-        <p className="marketing-card__body">{section.body}</p>
+        <div className="marketing-card__map-header">
+          <div>
+            <h3 className="marketing-card__title">{section.title}</h3>
+            <p className="marketing-card__body">{section.body}</p>
+          </div>
+          {section.cta && (
+            <a
+              href={section.ctaLink || SHOP_MAP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="marketing-card__cta marketing-card__cta--dark marketing-card__map-cta"
+            >
+              {section.cta}
+            </a>
+          )}
+        </div>
         <div className="marketing-card__map-wrap">
           <iframe
             title="Ralph and Sons Auto Repair map widget"
@@ -1465,16 +1495,6 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
         <p className="marketing-card__notice">
           <strong>Note:</strong> Ralph is no longer located at SLR Auto Repair in White Plains. Our only location is here in Fleetwood, Mount Vernon.
         </p>
-        {section.cta && (
-          <a
-            href={section.ctaLink || SHOP_MAP_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="marketing-card__cta marketing-card__cta--dark"
-          >
-            {section.cta}
-          </a>
-        )}
       </div>
     );
   }
