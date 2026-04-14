@@ -1,10 +1,13 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const allEnv = loadEnv("development", __dirname, "");
+Object.assign(process.env, allEnv);
 const BOOKINGS_FILE = path.join(__dirname, ".local-bookings.json");
 const MAX_PER_SLOT = 2;
 
@@ -73,11 +76,11 @@ function localApiFunctions() {
               return;
             }
             const { google } = await import("googleapis");
-            const auth = new google.auth.JWT(
-              GOOGLE_SERVICE_ACCOUNT_EMAIL, null,
-              GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-              ["https://www.googleapis.com/auth/calendar.events"]
-            );
+            const auth = new google.auth.JWT({
+              email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+              key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+              scopes: ["https://www.googleapis.com/auth/calendar.events"],
+            });
             const calendar = google.calendar({ version: "v3", auth });
             const [year, month, day] = data.dateKey.split("-").map(Number);
             const [hour, minute] = data.timeValue.split(":").map(Number);

@@ -71,12 +71,13 @@ exports.handler = async (event) => {
     .join("\n");
 
   try {
-    const auth = new google.auth.JWT(
-      GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      null,
-      GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-      ["https://www.googleapis.com/auth/calendar.events"]
-    );
+    const privateKey = GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
+
+    const auth = new google.auth.JWT({
+      email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: privateKey,
+      scopes: ["https://www.googleapis.com/auth/calendar.events"],
+    });
 
     const calendar = google.calendar({ version: "v3", auth });
 
@@ -96,7 +97,10 @@ exports.handler = async (event) => {
     return respond(200, { success: true, eventId: result.data.id });
   } catch (err) {
     console.error("Google Calendar API error:", err.message || err);
-    return respond(500, { error: "Failed to create calendar event" });
+    console.error("Service account:", GOOGLE_SERVICE_ACCOUNT_EMAIL);
+    console.error("Calendar ID:", GOOGLE_CALENDAR_ID);
+    console.error("Key starts with:", GOOGLE_PRIVATE_KEY.substring(0, 40));
+    return respond(500, { error: "Failed to create calendar event", detail: err.message });
   }
 };
 
