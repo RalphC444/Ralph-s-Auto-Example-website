@@ -282,7 +282,7 @@ const serviceDetails = [
   },
   {
     title: "Oil Change Service",
-    startingPrice: "Starting at $49",
+    startingPrice: "Request a Quote",
     symptoms: ["Oil life indicator alert", "Dark or low oil", "Louder engine operation"],
     included: ["Oil and filter replacement", "Fluid top-off", "Multi-point visual inspection"],
   },
