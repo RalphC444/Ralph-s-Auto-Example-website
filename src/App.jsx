@@ -567,6 +567,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
   const [calCollapsed, setCalCollapsed] = useState(false);
   const [selectedTime, setSelectedTime] = useState(null);
   const [slotAvailability, setSlotAvailability] = useState({});
+  const [fullyBookedDays, setFullyBookedDays] = useState(new Set());
   const [vehicleMake, setVehicleMake] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
@@ -579,6 +580,16 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
 
   const today = startOfToday();
   const todayKey = dateKeyFromParts(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const todayHasSlots = useMemo(() => {
+    const now = new Date();
+    const cutoff = now.getHours() * 60 + now.getMinutes() + 30;
+    return LEAD_TIME_SLOTS.some((slot) => {
+      const [h, m] = slot.value.split(":").map(Number);
+      return h * 60 + m > cutoff;
+    });
+  }, []);
+
   const anchorStart = firstDayOfMonth(monthAnchor);
   const currentMonthStart = firstDayOfMonth(new Date());
   const canGoPrev = anchorStart > currentMonthStart;
@@ -801,6 +812,50 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
     return () => { cancelled = true; };
   }, [selectedDateKey, step]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const totalSlots = LEAD_TIME_SLOTS.length;
+    const keys = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      if (isClosedWeekday(year, month, d)) continue;
+      const dt = new Date(year, month, d);
+      if (dt < today) continue;
+      keys.push(dateKeyFromParts(year, month, d));
+    }
+    if (!keys.length) return;
+
+    Promise.all(
+      keys.map((k) =>
+        fetch(`/api/get-slot-availability?date=${k}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      )
+    ).then((results) => {
+      if (cancelled) return;
+      const booked = new Set();
+      results.forEach((data, i) => {
+        if (!data?.slots) return;
+        const key = keys[i];
+        const isToday = key === todayKey;
+        let availableCount = 0;
+        for (const slot of LEAD_TIME_SLOTS) {
+          if (isToday) {
+            const now = new Date();
+            const cutoff = now.getHours() * 60 + now.getMinutes() + 30;
+            const [h, m] = slot.value.split(":").map(Number);
+            if (h * 60 + m <= cutoff) continue;
+          }
+          const info = data.slots[slot.value];
+          if (!info || info.booked < 2) availableCount++;
+        }
+        if (availableCount === 0) booked.add(key);
+      });
+      setFullyBookedDays(booked);
+    });
+    return () => { cancelled = true; };
+  }, [year, month]);
+
   const selectDay = (day) => {
     if (day == null) return;
     if (isClosedWeekday(year, month, day)) return;
@@ -808,6 +863,8 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
     candidate.setHours(0, 0, 0, 0);
     if (candidate < today) return;
     const key = dateKeyFromParts(year, month, day);
+    if (key === todayKey && !todayHasSlots) return;
+    if (fullyBookedDays.has(key)) return;
     setSelectedDateKey(key);
     setSelectedTime(null);
     if (window.innerWidth < 768) setCalCollapsed(true);
@@ -945,12 +1002,14 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                                   <div key={`e-${wi}-${di}`} className="lead-cal__cell lead-cal__cell--empty" />
                                 );
                               }
+                              const key = dateKeyFromParts(year, month, day);
+                              const isToday = key === todayKey;
                               const disabled =
                                 isClosedWeekday(year, month, day) ||
-                                new Date(year, month, day) < today;
-                              const key = dateKeyFromParts(year, month, day);
+                                new Date(year, month, day) < today ||
+                                (isToday && !todayHasSlots) ||
+                                fullyBookedDays.has(key);
                               const isSelected = selectedDateKey === key;
-                              const isToday = key === todayKey;
                               const isAvailable = !disabled && !isSelected;
                               return (
                                 <button
@@ -1199,7 +1258,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   })}
                   target="_blank"
                   rel="noreferrer"
-                  className="lead-wizard__cal-btn lead-wizard__cal-btn--user"
+                  className="marketing-card__cta lead-wizard__next lead-wizard__cal-btn--user"
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />

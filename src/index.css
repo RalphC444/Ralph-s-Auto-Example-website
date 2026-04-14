@@ -838,13 +838,14 @@ a {
 }
 
 .lead-wizard__cal-btn--user {
-  background: #dbeafe;
+  background: #fff;
   color: #1d4ed8;
-  border: 1px solid #93c5fd;
+  border: 1.5px solid #1d4ed8;
+  gap: 0.45rem;
 }
 
 .lead-wizard__cal-btn--user:hover {
-  background: #bfdbfe;
+  background: #eff6ff;
 }
 
 .lead-wizard__cal-done {
