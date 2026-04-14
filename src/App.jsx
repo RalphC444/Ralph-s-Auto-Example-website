@@ -1114,31 +1114,6 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   <strong>Vehicle:</strong> {vehicleYear} {vehicleMake} {vehicleModel}
                   {vehicleTrim ? ` · ${vehicleTrim}` : ""}
                 </p>
-                <a
-                  href={buildGoogleCalendarUrl({
-                    title: `${serviceRequested || "Appointment"} — ${SHOP_NAME}`,
-                    dateKey: selectedDateKey,
-                    timeValue: selectedTime,
-                    description: [
-                      `Service: ${serviceRequested}`,
-                      issueDescription.trim() ? `Issue: ${issueDescription.trim()}` : "",
-                      `Vehicle: ${vehicleYear} ${vehicleMake} ${vehicleModel}${vehicleTrim ? ` (${vehicleTrim})` : ""}`,
-                      "",
-                      `Contact: ${contactName} · ${contactEmail} · ${contactPhone}`,
-                    ].filter(Boolean).join("\n"),
-                    location: SHOP_ADDRESS,
-                  })}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="lead-wizard__cal-btn lead-wizard__cal-btn--user"
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                    <rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                    <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
-                    <path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  Add to your calendar
-                </a>
               </div>
             </div>
           ) : step === 3 ? (
@@ -1198,13 +1173,40 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
 
           <div className="lead-wizard__footer">
             {submitStatus === "sent" ? (
-              <button
-                type="button"
-                className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
-                onClick={() => onSubmitted?.()}
-              >
-                Done
-              </button>
+              <>
+                <a
+                  href={buildGoogleCalendarUrl({
+                    title: `${serviceRequested || "Appointment"} — ${SHOP_NAME}`,
+                    dateKey: selectedDateKey,
+                    timeValue: selectedTime,
+                    description: [
+                      `Service: ${serviceRequested}`,
+                      issueDescription.trim() ? `Issue: ${issueDescription.trim()}` : "",
+                      `Vehicle: ${vehicleYear} ${vehicleMake} ${vehicleModel}${vehicleTrim ? ` (${vehicleTrim})` : ""}`,
+                      "",
+                      `Contact: ${contactName} · ${contactEmail} · ${contactPhone}`,
+                    ].filter(Boolean).join("\n"),
+                    location: SHOP_ADDRESS,
+                  })}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lead-wizard__cal-btn lead-wizard__cal-btn--user"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                    <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" />
+                    <path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  Add to your calendar
+                </a>
+                <button
+                  type="button"
+                  className="marketing-card__cta marketing-card__cta--dark lead-wizard__next"
+                  onClick={() => onSubmitted?.()}
+                >
+                  Done
+                </button>
+              </>
             ) : (
               <>
                 {step === 3 && submitError && (
