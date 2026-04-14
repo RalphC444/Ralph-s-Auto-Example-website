@@ -2,6 +2,14 @@ const { getStore } = require("@netlify/blobs");
 
 const MAX_PER_SLOT = 2;
 
+function bookingsStore() {
+  const { NETLIFY_SITE_ID, NETLIFY_BLOBS_TOKEN } = process.env;
+  if (NETLIFY_SITE_ID && NETLIFY_BLOBS_TOKEN) {
+    return getStore({ name: "bookings", siteID: NETLIFY_SITE_ID, token: NETLIFY_BLOBS_TOKEN });
+  }
+  return getStore("bookings");
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers: corsHeaders() };
@@ -24,7 +32,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore("bookings");
+    const store = bookingsStore();
     const existing = await store.get(dateKey, { type: "json" }).catch(() => null) || {};
     const currentCount = existing[timeValue] || 0;
 

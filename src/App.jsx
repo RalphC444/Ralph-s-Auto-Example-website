@@ -719,7 +719,8 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
       }
 
       if (!reserveRes.ok) {
-        throw new Error("Could not reserve this time slot. Please try again.");
+        const errBody = await reserveRes.json().catch(() => ({}));
+        throw new Error(errBody.error || `Booking failed (${reserveRes.status}). Please try again.`);
       }
 
       await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, leadFormRef.current, {
