@@ -703,9 +703,9 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dateKey: selectedDateKey, timeValue: selectedTime }),
-      }).catch(() => null);
+      });
 
-      if (reserveRes && reserveRes.status === 409) {
+      if (reserveRes.status === 409) {
         const err409 = await reserveRes.json().catch(() => ({}));
         setSlotAvailability((prev) => ({
           ...prev,
@@ -716,6 +716,10 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
         setSubmitStatus("error");
         setStep(1);
         return;
+      }
+
+      if (!reserveRes.ok) {
+        throw new Error("Could not reserve this time slot. Please try again.");
       }
 
       await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, leadFormRef.current, {
