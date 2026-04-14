@@ -1472,6 +1472,8 @@ a {
   color: var(--muted);
   font-size: 0.84rem;
   max-width: 54ch;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .cards-footer__phone {
