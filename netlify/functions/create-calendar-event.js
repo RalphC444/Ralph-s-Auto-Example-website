@@ -53,7 +53,7 @@ exports.handler = async (event) => {
   const [hour, minute] = timeValue.split(":").map(Number);
 
   const startDate = new Date(year, month - 1, day, hour, minute);
-  const endDate = new Date(startDate.getTime() + 60 * 60_000);
+  const endDate = new Date(startDate.getTime() + 25 * 60_000);
 
   const formatISO = (d) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:00`;

@@ -26,9 +26,8 @@ const SERVICE_AREAS = [
   "Tuckahoe",
 ];
 
-const LEAD_CARD_TITLE = "Book an appointment with Ralph & Son's";
-const LEAD_CARD_BODY =
-  "Pick a preferred time, tell us about your vehicle, and we will follow up with next-step guidance and scheduling options.";
+const LEAD_CARD_TITLE = "Book An Appointment";
+const LEAD_CARD_BODY = "";
 
 const VEHICLE_YEAR_OPTIONS = (() => {
   const current = new Date().getFullYear();
@@ -429,7 +428,7 @@ function isClosedWeekday(year, month, day) {
   return new Date(year, month, day).getDay() === 0;
 }
 
-function buildGoogleCalendarUrl({ title, dateKey, timeValue, durationMinutes = 60, description, location }) {
+function buildGoogleCalendarUrl({ title, dateKey, timeValue, durationMinutes = 25, description, location }) {
   const [y, mo, d] = dateKey.split("-").map(Number);
   const [h, m] = timeValue.split(":").map(Number);
   const start = new Date(y, mo - 1, d, h, m);
@@ -892,7 +891,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
       >
         {title}
       </h3>
-      <p className="marketing-card__body">{body}</p>
+      {body && <p className="marketing-card__body">{body}</p>}
 
       <div className="lead-wizard" aria-label="Schedule contact steps">
         <div className="lead-wizard__step-row">
@@ -1089,6 +1088,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
           {step === 2 && (
             <div className="lead-wizard__panel lead-wizard__panel--vehicle">
               <label className="lead-wizard__field--full">
+              <p className="lead-wizard__section-label">What do you need help with?</p>
                 <span>Select a service<span className="required-star">*</span></span>
                 <select
                   value={serviceRequested}
@@ -1113,6 +1113,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                   placeholder="What symptoms, noises, or concerns should we know about?"
                 />
               </label>
+              <p className="lead-wizard__section-label">Enter details about your car:</p>
               <div className="lead-wizard__vehicle-grid">
                 <label>
                   <span>Year<span className="required-star">*</span></span>

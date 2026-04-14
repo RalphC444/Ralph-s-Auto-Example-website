@@ -441,6 +441,13 @@ a {
   line-height: 1.45;
 }
 
+.lead-wizard__section-label {
+  margin: 0.25rem 0 -0.1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
 .lead-wizard__vehicle-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -451,6 +458,12 @@ a {
 
 .lead-wizard__vehicle-grid label {
   min-width: 0;
+}
+
+.lead-wizard__vehicle-grid select,
+.lead-wizard__vehicle-grid input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 520px) {
@@ -693,6 +706,9 @@ a {
   margin-top: 0;
   min-width: 0;
   padding: 0.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .lead-times__slots {
@@ -700,8 +716,7 @@ a {
   flex-direction: column;
   flex-wrap: nowrap;
   gap: 0.5rem;
-  max-height: min(400px, 58vh);
-  min-height: 12rem;
+  min-height: 16rem;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -778,7 +793,8 @@ a {
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 0.65rem;
-  padding-top: 0.35rem;
+  padding-top: rem;
+  padding-bottom: 1rem !important;
   border-top: 1px solid #e2e8f0;
 }
 
@@ -1578,12 +1594,12 @@ a {
   display: flex;
   flex-direction: column;
   width: min(760px, 96vw);
-  height: min(620px, 80vh);
+  height: min(636px, 80vh);
   border-radius: 16px;
   border: 1px solid #c7d2e2;
   background: #ffffff;
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.26);
-  overflow: hidden;
+  overflow: clip;
 }
 
 .booking-modal__close {
@@ -1602,16 +1618,47 @@ a {
 }
 
 .booking-modal__scroll {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   border-radius: inherit;
-  padding: 2.5rem 1.1rem 1.25rem;
-  /* Prevent flex children from clipping at subpixel boundaries */
+  padding: 2.5rem 1.1rem 4.5rem;
+  display: flex;
+  flex-direction: column;
   isolation: isolate;
+}
+
+.booking-modal .marketing-card--lead-modal {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-modal .lead-form--wizard {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-modal .lead-wizard__panel--schedule {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.booking-modal .lead-schedule {
+  height: 100%;
+}
+
+@media (min-width: 540px) {
+  .booking-modal .lead-schedule__layout {
+    height: 100%;
+    align-items: stretch;
+  }
 }
 
 .marketing-card--lead-modal {
@@ -1620,8 +1667,6 @@ a {
   background: transparent;
   padding: 0;
   margin: 0;
-  /* .marketing-card--text sets overflow:hidden; without min-width:0 flex children
-     won't shrink and long lines get clipped instead of wrapping. */
   overflow: visible;
   min-width: 0;
 }
@@ -1730,10 +1775,18 @@ a {
 }
 
 .booking-modal .lead-times__slots {
-  max-height: min(280px, 40vh);
-  min-height: 10rem;
+  max-height: min(240px, 35vh);
+  min-height: 0;
+  overflow-y: auto;
   padding-top: 0.65rem;
   padding-bottom: 0.65rem;
+}
+
+@media (min-width: 540px) {
+  .booking-modal .lead-times__slots {
+    flex: 1 1 0;
+    max-height: none;
+  }
 }
 
 .booking-modal .lead-times__hint {
@@ -1741,11 +1794,12 @@ a {
 }
 
 .booking-modal .lead-wizard__footer {
-  position: sticky;
+  position: absolute;
   bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 5;
   background: #fff;
-  margin: 0;
   padding: 0.75rem 1.1rem;
   border-top: 1px solid #e2e8f0;
   flex-wrap: wrap;
@@ -2571,7 +2625,7 @@ a {
   }
 
   .booking-modal__scroll {
-    padding: 2.2rem 0.85rem 0.85rem;
+    padding: 2.2rem 0.85rem 4.5rem;
   }
 
   .services-page-view__grid {
@@ -2815,13 +2869,15 @@ a {
 
   .booking-modal {
     padding: 0.5rem;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
   }
 
   .booking-modal__panel {
     width: 100%;
+    max-width: 100%;
     height: min(540px, 78vh);
-    border-radius: 16px 16px 0 0;
+    border-radius: 16px;
   }
 
 }
