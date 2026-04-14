@@ -2005,10 +2005,7 @@ function CardsFooter({ className = "", compact = false }) {
           <p className="cards-footer__brand">{SHOP_NAME}</p>
           {!compact && (
             <>
-              <p className="cards-footer__body">{SHOP_ADDRESS}</p>
-              <p className="cards-footer__phone">
-                <a href={SHOP_PHONE_HREF}>{SHOP_PHONE}</a>
-              </p>
+              <p className="cards-footer__body">{SHOP_ADDRESS} • <a href={SHOP_PHONE_HREF}>{SHOP_PHONE}</a></p>
             </>
           )}
         </div>
