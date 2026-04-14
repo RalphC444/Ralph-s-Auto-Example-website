@@ -71,7 +71,13 @@ exports.handler = async (event) => {
     .join("\n");
 
   try {
-    const privateKey = GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
+    let privateKey = GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
+    const b64 = privateKey
+      .replace(/-----BEGIN PRIVATE KEY-----/, "")
+      .replace(/-----END PRIVATE KEY-----/, "")
+      .replace(/[\s]+/g, "");
+    const lines = b64.match(/.{1,64}/g) || [];
+    privateKey = `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----\n`;
 
     const auth = new google.auth.JWT({
       email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
