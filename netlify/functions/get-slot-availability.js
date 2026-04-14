@@ -3,11 +3,13 @@ const { getStore } = require("@netlify/blobs");
 const MAX_PER_SLOT = 2;
 
 function bookingsStore() {
-  const { NETLIFY_SITE_ID, NETLIFY_BLOBS_TOKEN } = process.env;
-  if (NETLIFY_SITE_ID && NETLIFY_BLOBS_TOKEN) {
-    return getStore({ name: "bookings", siteID: NETLIFY_SITE_ID, token: NETLIFY_BLOBS_TOKEN });
+  const siteID = process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN;
+  console.log("Blobs config — siteID present:", !!siteID, "token present:", !!token);
+  if (!siteID || !token) {
+    throw new Error("Missing NETLIFY_SITE_ID or NETLIFY_BLOBS_TOKEN env vars");
   }
-  return getStore("bookings");
+  return getStore({ name: "bookings", siteID, token });
 }
 
 exports.handler = async (event) => {
@@ -40,7 +42,7 @@ exports.handler = async (event) => {
     return respond(200, { date, maxPerSlot: MAX_PER_SLOT, slots });
   } catch (err) {
     console.error("Blob read error:", err.message || err);
-    return respond(500, { error: "Could not read availability" });
+    return respond(500, { error: `Could not read availability: ${err.message}` });
   }
 };
 
