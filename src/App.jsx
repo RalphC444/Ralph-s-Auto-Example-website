@@ -787,6 +787,7 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
           <input type="hidden" name="vehicle_trim" value={vehicleTrim} readOnly />
           <input type="hidden" name="service_requested" value={serviceRequested} readOnly />
           <input type="hidden" name="issue_description" value={issueDescription} readOnly />
+          <input type="hidden" name="customer_phone" value={contactPhone} readOnly />
           <input type="hidden" name="logo_url" value={`${window.location.origin}/images/ralph-sons-logo.png`} readOnly />
           <textarea name="message" readOnly className="lead-form__hidden" value={composedEmailBody} rows={1} />
 
