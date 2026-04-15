@@ -1377,7 +1377,7 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
                   section.ctaLink && opensBookingModal(section.ctaLink)
                     ? (event) => {
                         event.preventDefault();
-                        onOpenBooking();
+                        window.location.href = SHOP_PHONE_HREF;
                       }
                     : undefined
                 }
@@ -1418,7 +1418,7 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
                     : opensBookingModal(ctaHrefWithBookingDefault(section))
                       ? (event) => {
                           event.preventDefault();
-                          onOpenBooking();
+                          window.location.href = SHOP_PHONE_HREF;
                         }
                       : undefined
                 }
@@ -1453,7 +1453,7 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
                 opensBookingModal(ctaHrefWithBookingDefault(section))
                   ? (event) => {
                       event.preventDefault();
-                      onOpenBooking();
+                      window.location.href = SHOP_PHONE_HREF;
                     }
                   : undefined
               }
@@ -1488,7 +1488,7 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
                   opensBookingModal(ctaHrefWithBookingDefault(section))
                     ? (event) => {
                         event.preventDefault();
-                        onOpenBooking();
+                        window.location.href = SHOP_PHONE_HREF;
                       }
                     : undefined
                 }
@@ -1533,7 +1533,7 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
               opensBookingModal(ctaHrefWithBookingDefault(section))
                 ? (event) => {
                     event.preventDefault();
-                    onOpenBooking();
+                    window.location.href = SHOP_PHONE_HREF;
                   }
                 : undefined
             }
@@ -1585,9 +1585,9 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
       <div className="marketing-card marketing-card--text marketing-card--lead">
         <h3 className="marketing-card__title">{section.title}</h3>
         <p className="marketing-card__body">{section.body}</p>
-        <button type="button" className="marketing-card__cta marketing-card__cta--dark" onClick={onOpenBooking}>
-          Book appointment
-        </button>
+        <a href={SHOP_PHONE_HREF} className="marketing-card__cta marketing-card__cta--dark">
+          📞 Call {SHOP_PHONE}
+        </a>
       </div>
     );
   }
@@ -1676,7 +1676,7 @@ function SectionCard({ section, onOpenBooking, onOpenServicesPage, onOpenReviews
                 opensBookingModal(ctaHrefWithBookingDefault(section))
                   ? (event) => {
                       event.preventDefault();
-                      onOpenBooking();
+                      window.location.href = SHOP_PHONE_HREF;
                     }
                   : undefined
               }
@@ -1898,9 +1898,9 @@ function ServicesPage({ onGoHome, onOpenBooking, onOpenReviewsPage, enableMobile
           </div>
         </div>
         <div className="services-page-view__book-actions">
-          <button type="button" className="marketing-card__cta marketing-card__cta--dark" onClick={onOpenBooking}>
-            Book Appointment
-          </button>
+          <a href={SHOP_PHONE_HREF} className="marketing-card__cta marketing-card__cta--dark">
+            📞 Call {SHOP_PHONE}
+          </a>
           <button type="button" className="services-page-view__book-view-all" onClick={onOpenReviewsPage}>
             View all reviews
           </button>
@@ -1989,9 +1989,9 @@ function ReviewsPage({ onGoHome, onOpenBooking }) {
         ))}
       </div>
       <div className="reviews-page-view__book-row">
-        <button type="button" className="marketing-card__cta marketing-card__cta--dark" onClick={onOpenBooking}>
-          Book Appointment
-        </button>
+        <a href={SHOP_PHONE_HREF} className="marketing-card__cta marketing-card__cta--dark">
+          📞 Call {SHOP_PHONE}
+        </a>
       </div>
     </section>
   );
@@ -2252,9 +2252,9 @@ export default function App() {
           >
             Reviews
           </a>
-          <button type="button" className="header-cta" onClick={openBookingModal}>
-            Book Appointment
-          </button>
+          <a href={SHOP_PHONE_HREF} className="header-cta">
+            Call Now
+          </a>
         </nav>
       </header>
 
@@ -2289,12 +2289,16 @@ export default function App() {
                   exceptional customer service and quality&nbsp;workmanship.
                 </p>
                 <div className="hero__actions">
-                  <button type="button" className="hero__cta" onClick={openBookingModal}>
-                    Book Appointment
-                  </button>
-                  <a href="tel:9147765331" className="hero__cta hero__cta--secondary">
-                    📞 {SHOP_PHONE}
+                  <a href={SHOP_PHONE_HREF} className="hero__cta">
+                    📞 Call {SHOP_PHONE}
                   </a>
+                  <button
+                    type="button"
+                    className="hero__cta hero__cta--secondary"
+                    onClick={openServicesPage}
+                  >
+                    View Our Services
+                  </button>
                 </div>
               </div>
             </section>
