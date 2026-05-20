@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import ChatWidget from "./ChatWidget";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -2317,6 +2318,7 @@ export default function App() {
         </main>
       )}
       <BookingModal isOpen={isBookingModalOpen} onClose={closeBookingModal} wizardKey={bookingModalKey} />
+      <ChatWidget />
     </div>
   );
 }
