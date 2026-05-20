@@ -3,9 +3,9 @@ import emailjs from "@emailjs/browser";
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY ?? "";
 const OR_MODELS = [
+  "liquid/lfm-2.5-1.2b-instruct:free",
   "google/gemma-4-26b-a4b-it:free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "nvidia/nemotron-nano-12b-v2-vl:free",
 ];
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID ?? "";
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID ?? "";
@@ -138,21 +138,10 @@ async function fetchAvailableSlots(key) {
   });
 }
 
-const SYSTEM_PROMPT = `You are a friendly assistant for ${SHOP_NAME}.
-Location: ${SHOP_ADDRESS}
-Phone: ${SHOP_PHONE}
-Hours: Mon–Fri 8 AM–5:30 PM · Sat 8 AM–2 PM · Sun Closed
-
-Services:
-- NY State Inspection — from $37
-- Oil Change, Brake Repair, Engine Diagnostics, Suspension & Steering, Battery & Charging, Cooling System, Transmission Service, A/C & Heating, Exhaust & Muffler — request a quote
-
-Rules:
-- Keep answers to 1–3 short sentences. Be warm and helpful.
-- Never invent prices for quote-only services.
-- If someone wants to book, tell them to tap "Book an appointment" in this chat.
-- If you cannot answer something or the customer wants to speak to a person, tell them to call ${SHOP_PHONE} and include the current open/closed status from the hours above.
-- Do not discuss topics unrelated to the shop or cars.`;
+const SYSTEM_PROMPT = `You are a helpful assistant for ${SHOP_NAME}. Answer in 1–2 sentences maximum. Be direct and friendly.
+Location: ${SHOP_ADDRESS} | Phone: ${SHOP_PHONE} | Hours: Mon–Fri 8 AM–5:30 PM, Sat 8 AM–2 PM, Sun Closed
+Services: NY State Inspection ($37+), Oil Change, Brake Repair, Engine Diagnostics, Suspension, Battery, Cooling, Transmission, A/C & Heating, Exhaust — free estimates.
+Rules: Never invent prices. If they want to book, say tap "Book an appointment". If you can't help, give them the phone number. Stay on-topic about the shop or cars.`;
 
 // Returns a time-aware "call us" message based on Eastern Time shop hours
 function getCallPrompt() {
@@ -261,7 +250,7 @@ async function streamChat(history, onChunk, signal, model) {
       model,
       messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history],
       stream: true,
-      max_tokens: 250,
+      max_tokens: 100,
     }),
   });
 
