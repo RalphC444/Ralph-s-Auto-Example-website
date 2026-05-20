@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY ?? "";
-const OR_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+const OR_MODELS = [
+  "google/gemma-4-26b-a4b-it:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "nvidia/nemotron-nano-12b-v2-vl:free",
+];
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID ?? "";
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID ?? "";
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY ?? "";
@@ -243,7 +247,7 @@ function localAnswer(text) {
   return null; // let AI handle it
 }
 
-async function streamChat(history, onChunk, signal) {
+async function streamChat(history, onChunk, signal, model) {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     signal,
@@ -254,7 +258,7 @@ async function streamChat(history, onChunk, signal) {
       "X-Title": SHOP_NAME,
     },
     body: JSON.stringify({
-      model: OR_MODEL,
+      model,
       messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history],
       stream: true,
       max_tokens: 250,
@@ -493,32 +497,44 @@ export default function ChatWidget() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    try {
-      await streamChat(
-        history,
-        (chunk) => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === streamId ? { ...m, content: m.content + chunk } : m))
-          );
-        },
-        controller.signal
-      );
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === streamId
-              ? { ...m, content: `Sorry, I had trouble with that one. ${getCallPrompt()}`, streaming: false }
-              : m
-          )
+    let succeeded = false;
+    for (const model of OR_MODELS) {
+      if (controller.signal.aborted) break;
+      // reset content between retries
+      setMessages((prev) => prev.map((m) => (m.id === streamId ? { ...m, content: "" } : m)));
+      try {
+        await streamChat(
+          history,
+          (chunk) => {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === streamId ? { ...m, content: m.content + chunk } : m))
+            );
+          },
+          controller.signal,
+          model
         );
+        succeeded = true;
+        break;
+      } catch (err) {
+        if (err.name === "AbortError") break;
+        // try next model
       }
-    } finally {
-      setMessages((prev) =>
-        prev.map((m) => (m.id === streamId ? { ...m, streaming: false } : m))
-      );
-      setIsStreaming(false);
     }
+
+    if (!succeeded && !controller.signal.aborted) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === streamId
+            ? { ...m, content: `Sorry, I had trouble with that one. ${getCallPrompt()}`, streaming: false }
+            : m
+        )
+      );
+    }
+
+    setMessages((prev) =>
+      prev.map((m) => (m.id === streamId ? { ...m, streaming: false } : m))
+    );
+    setIsStreaming(false);
   }, []);
 
   // ── Booking flow ─────────────────────────────────────────────────────────
