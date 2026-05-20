@@ -2893,7 +2893,7 @@ a {
   z-index: 9999;
   width: 340px;
   max-width: calc(100vw - 28px);
-  max-height: min(560px, calc(100svh - 110px));
+  height: min(560px, calc(100svh - 110px));
   display: flex;
   flex-direction: column;
   border-radius: 16px;
@@ -3329,10 +3329,10 @@ a {
 
 @media (max-width: 600px) {
   .cwt {
-    bottom: 80px;
+    bottom: 74px;
     right: 10px;
     width: calc(100vw - 20px);
-    max-height: calc(100svh - 100px);
+    height: calc(100svh - 100px);
     border-radius: 14px;
   }
 
