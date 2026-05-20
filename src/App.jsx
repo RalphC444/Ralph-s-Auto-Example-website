@@ -1156,16 +1156,6 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
                     required
                   />
                 </label>
-                <label>
-                  <span>Trim / notes (optional)</span>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    placeholder="e.g. EX-L, hybrid"
-                    value={vehicleTrim}
-                    onChange={(e) => setVehicleTrim(e.target.value)}
-                  />
-                </label>
               </div>
             </div>
           )}
