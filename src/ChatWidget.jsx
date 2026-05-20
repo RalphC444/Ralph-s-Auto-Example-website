@@ -138,10 +138,15 @@ async function fetchAvailableSlots(key) {
   });
 }
 
-const SYSTEM_PROMPT = `You are a helpful assistant for ${SHOP_NAME}. Answer in 1–2 sentences maximum. Be direct and friendly.
+const SHOP_CTA_ACTIONS = ["Book an appointment", `Call ${SHOP_PHONE}`];
+
+const SYSTEM_PROMPT = `You are a customer service assistant ONLY for ${SHOP_NAME}. Answer in 1–2 sentences maximum. Be direct and friendly.
 Location: ${SHOP_ADDRESS} | Phone: ${SHOP_PHONE} | Hours: Mon–Fri 8 AM–5:30 PM, Sat 8 AM–2 PM, Sun Closed
 Services: NY State Inspection ($37+), Oil Change, Brake Repair, Engine Diagnostics, Suspension, Battery, Cooling, Transmission, A/C & Heating, Exhaust — free estimates.
-Rules: Never invent prices. If they want to book, say tap "Book an appointment". If you can't help, give them the phone number. Stay on-topic about the shop or cars.`;
+Rules:
+- ONLY answer questions about this shop, its services, appointments, vehicles, or car repair in general.
+- If the user asks about ANYTHING else (sports, news, coding, jokes, general knowledge, other businesses, etc.) respond with exactly: "I'm only set up to help with Ralph & Son Auto Repair — would you like to book an appointment or give us a call?"
+- Never invent prices. Never tell them to call — buttons for booking and calling are shown automatically after every reply.`;
 
 // Returns a time-aware "call us" message based on Eastern Time shop hours
 function getCallPrompt() {
@@ -514,14 +519,19 @@ export default function ChatWidget() {
       setMessages((prev) =>
         prev.map((m) =>
           m.id === streamId
-            ? { ...m, content: `Sorry, I had trouble with that one. ${getCallPrompt()}`, streaming: false }
+            ? { ...m, content: `Sorry, I had trouble with that one. ${getCallPrompt()}`, streaming: false, actions: SHOP_CTA_ACTIONS }
             : m
         )
       );
     }
 
+    // Append CTA buttons to every completed AI response (unless in booking flow)
     setMessages((prev) =>
-      prev.map((m) => (m.id === streamId ? { ...m, streaming: false } : m))
+      prev.map((m) =>
+        m.id === streamId
+          ? { ...m, streaming: false, ...(!bookingRef.current ? { actions: SHOP_CTA_ACTIONS } : {}) }
+          : m
+      )
     );
     setIsStreaming(false);
   }, []);
@@ -684,6 +694,8 @@ export default function ChatWidget() {
   const handleAction = useCallback((action) => {
     if (action === "Book an appointment") {
       startBooking();
+    } else if (action.startsWith("Call ")) {
+      window.location.href = `tel:${SHOP_PHONE.replace(/\D/g, "")}`;
     } else if (action === "Services & hours") {
       addMsg({ role: "user", content: "What services do you offer and what are your hours?" });
       addMsg({
