@@ -177,64 +177,68 @@ function getCallPrompt() {
   return `We're currently closed — give us a call ${nextOpen} at ${SHOP_PHONE}.`;
 }
 
-// Returns a pre-written answer for common questions, or null if AI should handle it
+const VIEW_SERVICES_ACTION = "View all services →";
+
+// Returns { content, actions? } or null to let AI handle it
 function localAnswer(text) {
   const t = text.toLowerCase();
 
-  if (/\b(human|person|real person|speak|talk to|agent|representative|someone|staff|call|operator)\b/.test(t)) {
-    return getCallPrompt();
+  if (/\b(human|person|real person|speak|talk to|agent|representative|someone|staff|operator)\b/.test(t)) {
+    return { content: getCallPrompt() };
   }
-
-  if (/\b(hour|open|close|when|schedule|time.*open|open.*time|saturday|sunday|weekend)\b/.test(t)) {
-    return "We're open Mon–Fri 8 AM – 5:30 PM and Saturday 8 AM – 2 PM. We're closed on Sundays.";
+  if (/\b(hour|open|close|when|time.*open|open.*time|saturday|sunday|weekend)\b/.test(t)) {
+    return { content: "Mon–Fri 8 AM – 5:30 PM · Sat 8 AM – 2 PM · Closed Sundays." };
   }
   if (/\b(where|location|address|direction|map|find|nearby|near)\b/.test(t)) {
-    return "We're located at 701 N Macquesten Pkwy, Mount Vernon, NY 10552 — easy drop-off access near Fleetwood Train Station.";
+    return { content: "701 N Macquesten Pkwy, Mount Vernon, NY 10552 — near Fleetwood Train Station." };
   }
-  if (/\b(phone|call|number|contact|reach)\b/.test(t)) {
-    return "You can call us at (914) 776-5331 during business hours.";
+  if (/\b(phone|number|contact|reach)\b/.test(t)) {
+    return { content: `Call us at ${SHOP_PHONE} during business hours.` };
   }
   if (/\b(price|cost|how much|charge|fee|rate|estimate|quote)\b/.test(t)) {
-    return "NY State Inspection starts at $37. Most other services are priced by quote — we offer free estimates and never add surprise charges. Tap 'Book an appointment' to get started.";
+    return { content: "NY State Inspection from $37. Everything else is by quote — free estimates, no surprise charges." };
   }
   if (/\b(inspect|inspection|nys|state inspect|registration|dmv)\b/.test(t)) {
-    return "NY State Inspections start at $37. We check safety and emissions, explain pass/fail results, and guide you on any needed repairs.";
+    return { content: "NY State Inspections start at $37. Safety and emissions checked, results explained." };
   }
   if (/\b(oil|oil change|lube|synthetic)\b/.test(t)) {
-    return "We do full oil and filter replacements with a multi-point visual inspection. Pricing depends on your vehicle — request a quote when you book.";
+    return { content: "We do oil and filter replacements with a multi-point inspection. Pricing by quote — book to get yours." };
   }
   if (/\b(brake|brakes|stopping|squeal|grind|pedal)\b/.test(t)) {
-    return "We handle brake inspections, pad and rotor recommendations, and a road test. Symptoms like squealing, grinding, or a soft pedal are all things we look at.";
+    return { content: "We handle brake inspections, pad/rotor recommendations, and a road test. Squealing or grinding? Come in." };
   }
   if (/\b(check engine|engine light|diagnostic|code|cel)\b/.test(t)) {
-    return "We run a full computer code scan and system testing to diagnose check engine lights, rough idle, or loss of power — and give you a clear repair plan with an estimate.";
+    return { content: "We scan codes, test systems, and give you a clear repair plan with an estimate." };
   }
   if (/\b(transmiss|gear|shifting|slipping)\b/.test(t)) {
-    return "We inspect transmission fluid condition and system performance. Symptoms like delayed engagement, hard shifting, or a fluid leak are signs to come in.";
+    return { content: "We check transmission fluid and performance. Hard shifting or a fluid leak? Time to come in." };
   }
   if (/\b(ac|a\/c|air condition|heat|hvac|vent|cool|warm air)\b/.test(t)) {
-    return "We diagnose A/C and heating issues including weak airflow, warm air from vents, and cabin heat problems — with a full HVAC inspection and repair quote.";
+    return { content: "We diagnose A/C and heating issues — weak airflow, warm air, or no cabin heat. Full inspection and quote." };
   }
   if (/\b(suspension|steering|alignment|pull|bumpy|rough ride|loose)\b/.test(t)) {
-    return "We check steering and suspension components for wear. If your car pulls to one side, rides rough, or steering feels loose, bring it in for an assessment.";
+    return { content: "We inspect steering and suspension for wear. Pulling to one side or a rough ride? Come in for an assessment." };
   }
   if (/\b(battery|batter|charging|alternator|slow crank|electrical|dead)\b/.test(t)) {
-    return "We test the battery and alternator, inspect terminals and cables, and give you replacement recommendations if needed.";
+    return { content: "We test the battery and alternator and check cables and terminals." };
   }
-  if (/\b(exhaust|muffler|noise|rattle|loud)\b/.test(t)) {
-    return "We diagnose exhaust leaks and inspect mufflers and pipes. Loud exhaust noise or rattling under the vehicle usually means it's time to come in.";
+  if (/\b(exhaust|muffler|rattle|loud exhaust)\b/.test(t)) {
+    return { content: "We inspect mufflers and pipes for leaks or damage. Loud noise or rattling under the car? Come in." };
   }
-  if (/\b(cooling|coolant|overheat|temperature|radiator|heat.*up|running hot)\b/.test(t)) {
-    return "We do a cooling pressure test and radiator/hose inspection. If your temp gauge is running hot or you see coolant leaks, don't wait — overheating can cause serious damage.";
+  if (/\b(cooling|coolant|overheat|temperature|radiator|running hot)\b/.test(t)) {
+    return { content: "We do cooling pressure tests and radiator inspections. Don't ignore an overheating gauge — it can cause serious damage." };
   }
   if (/\b(service|offer|what do you do|what.*fix|repair|work|speciali)\b/.test(t)) {
-    return "We offer: NY State Inspection (from $37), Oil Changes, Brake Repair, Engine Diagnostics, Suspension & Steering, Battery & Charging, Cooling System, Transmission Service, A/C & Heating, and Exhaust & Muffler Repair. Free estimates on everything.";
+    return {
+      content: "We offer inspections, oil changes, brakes, engine diagnostics, A/C, transmission, suspension, and more — free estimates on all.",
+      actions: [VIEW_SERVICES_ACTION],
+    };
   }
-  if (/\b(ralph|owner|who|about|team|mechanic|technician|staff)\b/.test(t)) {
-    return "Ralph has run this shop for over 40 years, building it on trust, transparency, and quality work. His team treats every customer like a neighbor — no surprise charges, ever.";
+  if (/\b(ralph|owner|who|about|team|mechanic|technician)\b/.test(t)) {
+    return { content: "Ralph has run this shop for 40+ years on trust and transparency. No surprise charges, ever." };
   }
   if (/\b(review|rating|reputation|google|stars|recommend)\b/.test(t)) {
-    return "Ralph & Son holds a 4.8/5 rating on Google with decades of loyal customers from Mount Vernon and surrounding communities.";
+    return { content: "4.8/5 on Google — decades of loyal customers across Mount Vernon and surrounding communities." };
   }
   return null; // let AI handle it
 }
@@ -665,7 +669,7 @@ export default function ChatWidget() {
 
     const canned = localAnswer(text);
     if (canned) {
-      addMsg({ role: "assistant", content: canned });
+      addMsg({ role: "assistant", content: canned.content, ...(canned.actions ? { actions: canned.actions } : {}) });
       return;
     }
 
@@ -679,8 +683,11 @@ export default function ChatWidget() {
       addMsg({ role: "user", content: "What services do you offer and what are your hours?" });
       addMsg({
         role: "assistant",
-        content: "We offer the following services (free estimates on all):\n\n• NY State Inspection — from $37\n• Oil Change\n• Brake Repair\n• Engine Diagnostics\n• Suspension & Steering\n• Battery & Charging\n• Cooling System Service\n• Transmission Service\n• A/C & Heating Repair\n• Exhaust & Muffler Repair\n\n🕐 Mon–Fri 8 AM – 5:30 PM · Sat 8 AM – 2 PM · Sun Closed\n📍 701 N Macquesten Pkwy, Mount Vernon, NY",
+        content: "We offer inspections, oil changes, brakes, diagnostics, A/C, transmission, suspension & more. Free estimates on all.\n\nMon–Fri 8 AM–5:30 PM · Sat 8 AM–2 PM · Sun Closed",
+        actions: [VIEW_SERVICES_ACTION],
       });
+    } else if (action === VIEW_SERVICES_ACTION) {
+      window.location.hash = "services";
     }
   }, [startBooking, addMsg]);
 
