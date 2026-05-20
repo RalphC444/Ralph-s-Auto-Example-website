@@ -2888,20 +2888,20 @@ a {
 
 .cwt {
   position: fixed;
-  bottom: 90px;
+  bottom: 88px;
   right: 20px;
-  z-index: 200;
-  width: 360px;
-  max-width: calc(100vw - 32px);
-  max-height: min(580px, calc(100svh - 120px));
+  z-index: 9999;
+  width: 340px;
+  max-width: calc(100vw - 28px);
+  max-height: min(560px, calc(100svh - 110px));
   display: flex;
   flex-direction: column;
-  border-radius: 18px;
+  border-radius: 16px;
   background: #ffffff;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #dde3ec;
   overflow: hidden;
-  animation: cwt-slide-up 0.28s cubic-bezier(0.34, 1.26, 0.64, 1);
+  animation: cwt-slide-up 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
 @keyframes cwt-slide-up {
@@ -3029,14 +3029,16 @@ a {
   margin-top: 2px;
 }
 
+/* message content wrapper — NOT the FAB button */
 .cwt-bubble {
-  max-width: 85%;
+  max-width: 82%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .cwt-msg--user .cwt-bubble {
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
 }
 
@@ -3239,12 +3241,6 @@ a {
 .cwt-btn-primary:hover:not(:disabled) { background: #3d6050; }
 .cwt-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* Booking done */
-.cwt-msg--bot .cwt-bubble .cwt-text:has(+ .cwt-booking-done),
-.cwt-msg--bot .cwt-text {
-  background: #f1f5f9;
-}
-
 /* Input row */
 .cwt__input-row {
   display: flex;
@@ -3289,14 +3285,14 @@ a {
 .cwt__send:hover:not(:disabled) { background: #3d6050; }
 .cwt__send:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Floating bubble */
-.cwt-bubble {
+/* ── Floating action button (FAB) — separate from .cwt-bubble message wrapper ── */
+.cwt-fab {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 200;
-  width: 56px;
-  height: 56px;
+  z-index: 9999;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: #2d4a39;
   color: #fff;
@@ -3305,44 +3301,44 @@ a {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.24);
   transition: background 0.15s, transform 0.15s;
+  flex-shrink: 0;
 }
 
-.cwt-bubble:hover { background: #3d6050; transform: scale(1.06); }
+.cwt-fab:hover { background: #3d6050; transform: scale(1.07); }
+.cwt-fab--open { background: #3d5060; }
 
-.cwt-bubble--open {
-  background: #475569;
-}
-
-.cwt-bubble__badge {
+.cwt-fab__badge {
   position: absolute;
-  top: -3px;
-  right: -3px;
+  top: -2px;
+  right: -2px;
   width: 20px;
   height: 20px;
   border-radius: 50%;
   background: #e53e3e;
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid #fff;
+  pointer-events: none;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .cwt {
-    bottom: 82px;
-    right: 12px;
-    width: calc(100vw - 24px);
-    max-height: calc(100svh - 110px);
+    bottom: 80px;
+    right: 10px;
+    width: calc(100vw - 20px);
+    max-height: calc(100svh - 100px);
+    border-radius: 14px;
   }
 
-  .cwt-bubble {
-    bottom: 16px;
-    right: 12px;
+  .cwt-fab {
+    bottom: 14px;
+    right: 14px;
     width: 50px;
     height: 50px;
   }

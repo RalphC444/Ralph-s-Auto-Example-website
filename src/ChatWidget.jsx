@@ -658,7 +658,7 @@ export default function ChatWidget() {
       )}
 
       <button
-        className={`cwt-bubble${isOpen ? " cwt-bubble--open" : ""}`}
+        className={`cwt-fab${isOpen ? " cwt-fab--open" : ""}`}
         onClick={() => setIsOpen((v) => !v)}
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
@@ -672,7 +672,7 @@ export default function ChatWidget() {
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <span className="cwt-bubble__badge" aria-label="1 unread message">1</span>
+            <span className="cwt-fab__badge" aria-label="1 unread message">1</span>
           </>
         )}
       </button>
