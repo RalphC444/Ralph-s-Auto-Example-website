@@ -147,11 +147,43 @@ Rules:
 - Keep answers to 1–3 short sentences. Be warm and helpful.
 - Never invent prices for quote-only services.
 - If someone wants to book, tell them to tap "Book an appointment" in this chat.
+- If you cannot answer something or the customer wants to speak to a person, tell them to call ${SHOP_PHONE} and include the current open/closed status from the hours above.
 - Do not discuss topics unrelated to the shop or cars.`;
+
+// Returns a time-aware "call us" message based on Eastern Time shop hours
+function getCallPrompt() {
+  const etNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const day = etNow.getDay(); // 0=Sun … 6=Sat
+  const mins = etNow.getHours() * 60 + etNow.getMinutes();
+
+  const isOpen =
+    (day >= 1 && day <= 5 && mins >= 480 && mins < 1050) || // Mon–Fri 8–5:30
+    (day === 6 && mins >= 480 && mins < 840);                // Sat 8–2
+
+  if (isOpen) {
+    return `Give us a call right now at ${SHOP_PHONE} — we're open!`;
+  }
+
+  const DAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  let nextOpen = "";
+  if (day === 0)                        nextOpen = "Monday at 8 AM";
+  else if (day >= 1 && day <= 4 && mins < 480)  nextOpen = `today at 8 AM`;
+  else if (day >= 1 && day <= 4)        nextOpen = `${DAY[day + 1]} at 8 AM`;
+  else if (day === 5 && mins < 480)     nextOpen = `today at 8 AM`;
+  else if (day === 5)                   nextOpen = `Saturday at 8 AM`;
+  else if (day === 6 && mins < 480)     nextOpen = `today at 8 AM`;
+  else                                  nextOpen = `Monday at 8 AM`;
+
+  return `We're currently closed — give us a call ${nextOpen} at ${SHOP_PHONE}.`;
+}
 
 // Returns a pre-written answer for common questions, or null if AI should handle it
 function localAnswer(text) {
   const t = text.toLowerCase();
+
+  if (/\b(human|person|real person|speak|talk to|agent|representative|someone|staff|call|operator)\b/.test(t)) {
+    return getCallPrompt();
+  }
 
   if (/\b(hour|open|close|when|schedule|time.*open|open.*time|saturday|sunday|weekend)\b/.test(t)) {
     return "We're open Mon–Fri 8 AM – 5:30 PM and Saturday 8 AM – 2 PM. We're closed on Sundays.";
@@ -472,7 +504,7 @@ export default function ChatWidget() {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === streamId
-              ? { ...m, content: "Sorry, I couldn't connect. Please call us at (914) 776-5331.", streaming: false }
+              ? { ...m, content: `Sorry, I had trouble with that one. ${getCallPrompt()}`, streaming: false }
               : m
           )
         );
@@ -667,7 +699,7 @@ export default function ChatWidget() {
             <div className="cwt__header-left">
               <span className="cwt__avatar-sm" aria-hidden="true">R&amp;S</span>
               <div>
-                <p className="cwt__shop-name">Ralph and Sons Auto</p>
+                <p className="cwt__shop-name">Ralph and Son Auto</p>
                 <p className="cwt__online">● Online now</p>
               </div>
             </div>
