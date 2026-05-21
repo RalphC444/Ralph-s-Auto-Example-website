@@ -1853,6 +1853,35 @@ a {
   font-weight: 700;
 }
 
+/* Confirmation step: Add-to-calendar gets a true secondary (ghost) look,
+   so it visually defers to "Done". */
+.booking-modal .lead-wizard__next.marketing-card__cta--secondary {
+  width: 100%;
+  background: #fff;
+  color: #0b57d0;
+  border: 1px solid #0b57d0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.booking-modal .lead-wizard__next.marketing-card__cta--secondary:hover {
+  background: #eef4ff;
+}
+
+/* Desktop / tablet: render the two confirmation CTAs side-by-side,
+   with "Done" on the right. Mobile keeps the default stacked layout. */
+@media (min-width: 540px) {
+  .booking-modal .lead-wizard__next,
+  .booking-modal .lead-wizard__next.marketing-card__cta--secondary,
+  .booking-modal .marketing-card__cta--dark {
+    width: auto;
+    flex: 1 1 0;
+  }
+}
+
 .booking-modal .marketing-card__cta--dark:hover:not(:disabled) {
   background: #0948ad;
 }
