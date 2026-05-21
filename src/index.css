@@ -1604,6 +1604,15 @@ a {
   overflow: hidden;
 }
 
+/* Mobile: take more vertical space so the wizard form + footer both fit
+   without the last field hiding behind the docked CTA. */
+@media (max-width: 539px) {
+  .booking-modal__panel {
+    height: 95svh;
+    width: 96vw;
+  }
+}
+
 .booking-modal__close {
   position: absolute;
   top: 0.65rem;
@@ -1629,8 +1638,8 @@ a {
   border-radius: inherit;
   /* Bottom padding clears the absolutely-positioned footer (~56px) with
      comfortable breathing room — and survives a wrapped error message. */
-  padding: 2.5rem 1.1rem 7rem;
-  scroll-padding-bottom: 7rem;
+  padding: 2.5rem 1.1rem 8.5rem;
+  scroll-padding-bottom: 8.5rem;
   display: flex;
   flex-direction: column;
   isolation: isolate;
