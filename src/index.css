@@ -1596,8 +1596,7 @@ a {
   display: flex;
   flex-direction: column;
   width: min(760px, 96vw);
-  max-height: min(636px, 90svh);
-  height: auto;
+  height: min(636px, 90svh);
   border-radius: 16px;
   border: 1px solid #c7d2e2;
   background: #ffffff;
