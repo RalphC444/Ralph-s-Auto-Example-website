@@ -754,6 +754,9 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
         return { ...prev, [selectedTime]: { booked: cur + 1, remaining: Math.max(0, 2 - cur - 1) } };
       });
 
+      // Calendar event creation — non-blocking but logs result for debugging.
+      // If it fails, the booking + email still succeed; check browser console
+      // and Netlify function logs for the underlying Google API error.
       fetch("/api/create-calendar-event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -770,7 +773,16 @@ function MechanicLeadWizard({ title, body, variant = "page", onSubmitted }) {
           vehicleModel,
           vehicleTrim,
         }),
-      }).catch(() => {});
+      })
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data?.success) {
+            console.warn("[calendar] failed:", res.status, data);
+          } else {
+            console.log("[calendar] event created:", data.eventId, data.htmlLink);
+          }
+        })
+        .catch((err) => console.warn("[calendar] network error:", err));
     } catch (err) {
       const msg =
         (typeof err?.text === "string" && err.text) ||

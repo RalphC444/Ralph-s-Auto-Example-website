@@ -2,6 +2,7 @@ const { google } = require("googleapis");
 
 const SHOP_ADDRESS = "701 N Macquesten Pkwy, Mount Vernon, NY 10552";
 const TIMEZONE = "America/New_York";
+const APPT_DURATION_HOURS = 1;
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
@@ -16,18 +17,19 @@ exports.handler = async (event) => {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REFRESH_TOKEN,
-    GOOGLE_CALENDAR_ID,
+    GOOGLE_CALENDAR_ID, // optional — falls back to "primary"
   } = process.env;
 
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN || !GOOGLE_CALENDAR_ID) {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN) {
     return respond(500, {
-      error: "Google Calendar is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, and GOOGLE_CALENDAR_ID.",
+      error:
+        "Google Calendar not configured. Required env vars: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN. (GOOGLE_CALENDAR_ID is optional and defaults to 'primary'.)",
     });
   }
 
   let body;
   try {
-    body = JSON.parse(event.body);
+    body = JSON.parse(event.body || "{}");
   } catch {
     return respond(400, { error: "Invalid JSON body" });
   }
@@ -47,17 +49,26 @@ exports.handler = async (event) => {
   } = body;
 
   if (!dateKey || !timeValue || !contactName) {
-    return respond(400, { error: "Missing required fields: dateKey, timeValue, contactName" });
+    return respond(400, {
+      error: "Missing required fields: dateKey (YYYY-MM-DD), timeValue (HH:MM), contactName",
+    });
   }
 
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const [hour, minute] = timeValue.split(":").map(Number);
+  // Build ISO strings DIRECTLY from user input — no Date math, no server-timezone
+  // dependency. Google interprets these strings in the timeZone we pass alongside.
+  // dateKey:   "2026-05-21"
+  // timeValue: "13:00"
+  const [hourStr, minuteStr] = timeValue.split(":");
+  const hour = Number(hourStr);
+  const minute = Number(minuteStr);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return respond(400, { error: "timeValue must be HH:MM (24-hour)" });
+  }
 
-  const startDate = new Date(year, month - 1, day, hour, minute);
-  const endDate = new Date(startDate.getTime() + 60 * 60_000); // 1 hour slot
-
-  const formatISO = (d) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:00`;
+  const pad = (n) => String(n).padStart(2, "0");
+  const startISO = `${dateKey}T${pad(hour)}:${pad(minute)}:00`;
+  const endHour = hour + APPT_DURATION_HOURS; // 1-hour appointment, never crosses midnight given shop hours
+  const endISO = `${dateKey}T${pad(endHour)}:${pad(minute)}:00`;
 
   const descriptionLines = [
     `Customer: ${contactName}`,
@@ -71,12 +82,10 @@ exports.handler = async (event) => {
     .filter((line) => line !== null)
     .join("\n");
 
-  try {
-    const auth = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET
-    );
+  const calendarId = GOOGLE_CALENDAR_ID || "primary";
 
+  try {
+    const auth = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
     auth.setCredentials({ refresh_token: GOOGLE_REFRESH_TOKEN });
 
     const calendar = google.calendar({ version: "v3", auth });
@@ -85,19 +94,43 @@ exports.handler = async (event) => {
       summary: `${contactName} — ${serviceRequested || "Appointment"}`,
       description: descriptionLines,
       location: SHOP_ADDRESS,
-      start: { dateTime: formatISO(startDate), timeZone: TIMEZONE },
-      end: { dateTime: formatISO(endDate), timeZone: TIMEZONE },
+      start: { dateTime: startISO, timeZone: TIMEZONE },
+      end: { dateTime: endISO, timeZone: TIMEZONE },
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: "email", minutes: 24 * 60 },
+          { method: "popup", minutes: 60 },
+        ],
+      },
     };
 
     const result = await calendar.events.insert({
-      calendarId: GOOGLE_CALENDAR_ID,
+      calendarId,
       requestBody: calendarEvent,
     });
 
-    return respond(200, { success: true, eventId: result.data.id });
+    return respond(200, {
+      success: true,
+      eventId: result.data.id,
+      htmlLink: result.data.htmlLink,
+      calendarId,
+      start: startISO,
+      end: endISO,
+    });
   } catch (err) {
-    console.error("Google Calendar API error:", err.message || err);
-    return respond(500, { error: "Failed to create calendar event", detail: err.message });
+    // Surface as much detail as Google gives us — this is what makes debugging possible
+    const googleDetail =
+      err?.response?.data?.error ||
+      err?.errors ||
+      err?.message ||
+      String(err);
+    console.error("Google Calendar API error:", JSON.stringify(googleDetail, null, 2));
+    return respond(500, {
+      error: "Failed to create calendar event",
+      detail: googleDetail,
+      calendarId,
+    });
   }
 };
 

@@ -658,7 +658,8 @@ export default function ChatWidget({ bookingModalOpen = false }) {
         });
       }
 
-      // Create Google Calendar event (fire-and-forget — don't block booking confirmation)
+      // Create Google Calendar event (non-blocking). We log the result so
+      // failures surface in the browser console for debugging.
       fetch("/api/create-calendar-event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -673,7 +674,16 @@ export default function ChatWidget({ bookingModalOpen = false }) {
           vehicleMake: bk.make,
           vehicleModel: bk.model,
         }),
-      }).catch(() => {}); // silent fail — email is the primary notification
+      })
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data?.success) {
+            console.warn("[calendar] failed:", res.status, data);
+          } else {
+            console.log("[calendar] event created:", data.eventId, data.htmlLink);
+          }
+        })
+        .catch((err) => console.warn("[calendar] network error:", err));
 
       patchLastWithUI("submitting", {
         bookingUI: "done",
