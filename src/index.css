@@ -1851,9 +1851,10 @@ a {
 .booking-modal .lead-wizard__next {
   flex: 1 1 auto;
   min-width: 0;
+  box-sizing: border-box;
   background: #0b57d0;
   color: #fff;
-  border: none;
+  border: 1.5px solid transparent;
   padding: 0.68rem 1rem;
   border-radius: 12px;
   font-weight: 700;
@@ -1883,9 +1884,12 @@ a {
    so it visually defers to "Done". */
 .booking-modal .lead-wizard__next.marketing-card__cta--secondary {
   width: 100%;
+  box-sizing: border-box;
   background: #fff;
   color: #0b57d0;
-  border: 1px solid #0b57d0;
+  border: 1.5px solid #0b57d0;
+  /* Match solid button's padding exactly so both CTAs are identical height */
+  padding: 0.68rem 1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
