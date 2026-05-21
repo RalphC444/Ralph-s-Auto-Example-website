@@ -2318,7 +2318,7 @@ export default function App() {
         </main>
       )}
       <BookingModal isOpen={isBookingModalOpen} onClose={closeBookingModal} wizardKey={bookingModalKey} />
-      <ChatWidget />
+      <ChatWidget bookingModalOpen={isBookingModalOpen} />
     </div>
   );
 }

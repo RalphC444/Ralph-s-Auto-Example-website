@@ -423,12 +423,18 @@ function ChatMessage({ msg, onAction, onServiceSelect, onVehicleSubmit, onDateSe
   );
 }
 
-export default function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(true);
+export default function ChatWidget({ bookingModalOpen = false }) {
+  // Start collapsed on mobile (viewport width < 640px)
+  const [isOpen, setIsOpen] = useState(() => window.innerWidth >= 640);
   const [messages, setMessages] = useState(INIT_MESSAGES);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [booking, setBooking] = useState(null);
+
+  // Collapse widget whenever the booking modal opens
+  useEffect(() => {
+    if (bookingModalOpen) setIsOpen(false);
+  }, [bookingModalOpen]);
 
   const messagesRef = useRef(messages);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
