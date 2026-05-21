@@ -1813,7 +1813,7 @@ a {
 
 /* Step 2 — vehicle grid (Year / Make / Model) */
 .booking-modal .lead-wizard__vehicle-grid {
-  padding-bottom: 40px;
+  padding-bottom: 100px;
 }
 
 /* Step 3 — booking recap summary */
