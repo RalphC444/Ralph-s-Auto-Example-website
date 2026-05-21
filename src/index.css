@@ -1627,8 +1627,10 @@ a {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   border-radius: inherit;
-  /* padding-bottom leaves room for the absolutely-positioned footer */
-  padding: 2.5rem 1.1rem 80px;
+  /* Bottom padding clears the absolutely-positioned footer (~56px) with
+     comfortable breathing room — and survives a wrapped error message. */
+  padding: 2.5rem 1.1rem 7rem;
+  scroll-padding-bottom: 7rem;
   display: flex;
   flex-direction: column;
   isolation: isolate;
@@ -1795,20 +1797,24 @@ a {
 
 .booking-modal .lead-wizard__footer {
   /* Pinned to the bottom of .booking-modal__panel (position: relative),
-     not inside the scroll flow — content scrolls freely above it */
+     not inside the scroll flow — content scrolls freely above it. */
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 10;
+  box-sizing: border-box;
+  min-height: 56px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   background: #fff;
-  padding: 0.75rem 1.1rem;
+  padding: 0.6rem 1.1rem;
   border-top: 1px solid #e2e8f0;
   border-radius: 0 0 16px 16px;
+  /* Subtle shadow makes the dock visible even when content scrolls behind */
+  box-shadow: 0 -6px 14px -8px rgba(15, 23, 42, 0.12);
 }
 
 .lead-wizard__footer-error {
