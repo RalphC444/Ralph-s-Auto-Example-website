@@ -1804,6 +1804,23 @@ a {
   margin-bottom: 0.65rem;
 }
 
+/* Extra breathing room after the last item in each wizard step */
+
+/* Step 1 — last slot in the time-slot list */
+.booking-modal .lead-times__slots {
+  padding-bottom: calc(0.65rem + 40px);
+}
+
+/* Step 2 — vehicle grid (Year / Make / Model) */
+.booking-modal .lead-wizard__vehicle-grid {
+  padding-bottom: 40px;
+}
+
+/* Step 3 — booking recap summary */
+.booking-modal .lead-wizard__recap {
+  margin-bottom: 40px;
+}
+
 .booking-modal .lead-wizard__footer {
   /* Pinned to the bottom of .booking-modal__panel (position: relative),
      not inside the scroll flow — content scrolls freely above it. */
