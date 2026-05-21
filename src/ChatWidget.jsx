@@ -652,6 +652,23 @@ export default function ChatWidget() {
         });
       }
 
+      // Create Google Calendar event (fire-and-forget — don't block booking confirmation)
+      fetch("/api/create-calendar-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dateKey: bk.dateKey,
+          timeValue: bk.timeValue,
+          contactName: name,
+          contactEmail: email,
+          contactPhone: phone,
+          serviceRequested: bk.service,
+          vehicleYear: bk.year,
+          vehicleMake: bk.make,
+          vehicleModel: bk.model,
+        }),
+      }).catch(() => {}); // silent fail — email is the primary notification
+
       patchLastWithUI("submitting", {
         bookingUI: "done",
         content: `Booked! We'll see you ${fmtDateKey(bk.dateKey)} at ${bk.timeLabel}.\n${bk.service} · ${bk.year} ${bk.make} ${bk.model}`,

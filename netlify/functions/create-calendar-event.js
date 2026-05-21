@@ -13,14 +13,15 @@ exports.handler = async (event) => {
   }
 
   const {
-    GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    GOOGLE_PRIVATE_KEY,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REFRESH_TOKEN,
     GOOGLE_CALENDAR_ID,
   } = process.env;
 
-  if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY || !GOOGLE_CALENDAR_ID) {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN || !GOOGLE_CALENDAR_ID) {
     return respond(500, {
-      error: "Google Calendar is not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, and GOOGLE_CALENDAR_ID.",
+      error: "Google Calendar is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, and GOOGLE_CALENDAR_ID.",
     });
   }
 
@@ -53,7 +54,7 @@ exports.handler = async (event) => {
   const [hour, minute] = timeValue.split(":").map(Number);
 
   const startDate = new Date(year, month - 1, day, hour, minute);
-  const endDate = new Date(startDate.getTime() + 25 * 60_000);
+  const endDate = new Date(startDate.getTime() + 60 * 60_000); // 1 hour slot
 
   const formatISO = (d) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:00`;
@@ -71,19 +72,12 @@ exports.handler = async (event) => {
     .join("\n");
 
   try {
-    let privateKey = GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
-    const b64 = privateKey
-      .replace(/-----BEGIN PRIVATE KEY-----/, "")
-      .replace(/-----END PRIVATE KEY-----/, "")
-      .replace(/[\s]+/g, "");
-    const lines = b64.match(/.{1,64}/g) || [];
-    privateKey = `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----\n`;
+    const auth = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET
+    );
 
-    const auth = new google.auth.JWT({
-      email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: privateKey,
-      scopes: ["https://www.googleapis.com/auth/calendar.events"],
-    });
+    auth.setCredentials({ refresh_token: GOOGLE_REFRESH_TOKEN });
 
     const calendar = google.calendar({ version: "v3", auth });
 
@@ -103,9 +97,6 @@ exports.handler = async (event) => {
     return respond(200, { success: true, eventId: result.data.id });
   } catch (err) {
     console.error("Google Calendar API error:", err.message || err);
-    console.error("Service account:", GOOGLE_SERVICE_ACCOUNT_EMAIL);
-    console.error("Calendar ID:", GOOGLE_CALENDAR_ID);
-    console.error("Key starts with:", GOOGLE_PRIVATE_KEY.substring(0, 40));
     return respond(500, { error: "Failed to create calendar event", detail: err.message });
   }
 };
