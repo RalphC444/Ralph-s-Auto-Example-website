@@ -1627,37 +1627,27 @@ a {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   border-radius: inherit;
-  padding: 2.5rem 1.1rem 1rem;
+  /* padding-bottom leaves room for the absolutely-positioned footer */
+  padding: 2.5rem 1.1rem 80px;
   display: flex;
   flex-direction: column;
   isolation: isolate;
 }
 
 .booking-modal .marketing-card--lead-modal {
-  flex: 1 1 0;
-  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-/* .lead-wizard sits between the card and the form — must pass height down */
+/* .lead-wizard and form — natural flow, no forced height stretch needed */
 .booking-modal .lead-wizard {
-  flex: 1 1 0;
-  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
 .booking-modal .lead-form--wizard {
-  flex: 1 1 0;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-}
-
-.booking-modal .lead-wizard__panel--schedule {
-  flex: 1 1 0;
-  min-height: 0;
 }
 
 .booking-modal .lead-schedule {
@@ -1804,15 +1794,21 @@ a {
 }
 
 .booking-modal .lead-wizard__footer {
+  /* Pinned to the bottom of .booking-modal__panel (position: relative),
+     not inside the scroll flow — content scrolls freely above it */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-top: auto;
-  flex-shrink: 0;
   background: #fff;
   padding: 0.75rem 1.1rem;
   border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 16px 16px;
 }
 
 .lead-wizard__footer-error {
