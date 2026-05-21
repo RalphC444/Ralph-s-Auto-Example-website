@@ -1804,14 +1804,15 @@ a {
 }
 
 .booking-modal .lead-wizard__footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  flex-shrink: 0;
   background: #fff;
   padding: 0.75rem 1.1rem;
   border-top: 1px solid #e2e8f0;
-  flex-wrap: wrap;
-  margin-top: auto;
 }
 
 .lead-wizard__footer-error {
