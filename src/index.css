@@ -50,6 +50,11 @@ a {
   border-bottom: 1px solid var(--line);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
 .logo {
   display: inline-flex;
   align-items: center;
@@ -2937,6 +2942,14 @@ a {
   /* Mobile menu shows as flex column when rendered */
   .mobile-menu {
     display: flex;
+  }
+
+  /* Left-align hamburger + logo; push nav (Book Appointment) to the right */
+  .site-header {
+    justify-content: flex-start;
+  }
+  .site-header .top-nav {
+    margin-left: auto;
   }
 
 }
