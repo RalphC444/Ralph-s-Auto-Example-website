@@ -2049,6 +2049,7 @@ export default function App() {
   const [activePage, setActivePage] = useState(
     typeof window !== "undefined" ? getActivePageFromHash(window.location.hash) : "home"
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const openBookingModal = () => {
     setBookingModalKey((k) => k + 1);
@@ -2059,6 +2060,9 @@ export default function App() {
     resetScrollToTop();
     requestAnimationFrame(resetScrollToTop);
   }, [activePage]);
+
+  // Close mobile menu whenever page changes
+  useEffect(() => { setMobileMenuOpen(false); }, [activePage]);
 
   const openServicesPage = (source = "link") => {
     servicesEntrySourceRef.current = source;
@@ -2224,16 +2228,42 @@ export default function App() {
     <div ref={appRef}>
       <script type="application/ld+json">{JSON.stringify(localBusinessSchema)}</script>
       <header className="site-header">
+        {/* Hamburger — mobile only, left of logo */}
+        <button
+          type="button"
+          className="hamburger-btn"
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((v) => !v)}
+        >
+          {mobileMenuOpen ? (
+            /* X icon */
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <line x1="4" y1="4" x2="20" y2="20" />
+              <line x1="20" y1="4" x2="4" y2="20" />
+            </svg>
+          ) : (
+            /* Hamburger icon */
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          )}
+        </button>
+
         <a
           href="#"
           className="logo"
           onClick={(event) => {
             event.preventDefault();
             openHomePage();
+            setMobileMenuOpen(false);
           }}
         >
           <img src="/images/ralph-sons-logo.svg?v=2" alt="Ralph and Son logo" className="logo__img" />
         </a>
+
         <nav className="top-nav" aria-label="Header actions">
           <a
             href="#services"
@@ -2259,6 +2289,46 @@ export default function App() {
             Book Appointment
           </button>
         </nav>
+
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu" role="menu">
+            <a
+              href="#services"
+              className="mobile-menu__link"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                openServicesPage("nav");
+                setMobileMenuOpen(false);
+              }}
+            >
+              Services
+            </a>
+            <a
+              href="#reviews"
+              className="mobile-menu__link"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                openReviewsPage();
+                setMobileMenuOpen(false);
+              }}
+            >
+              Reviews
+            </a>
+            <button
+              type="button"
+              className="mobile-menu__cta"
+              onClick={() => {
+                openBookingModal();
+                setMobileMenuOpen(false);
+              }}
+            >
+              Book Appointment
+            </button>
+          </div>
+        )}
       </header>
 
       {activePage === "services" ? (
