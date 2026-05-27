@@ -2317,16 +2317,6 @@ export default function App() {
             >
               Reviews
             </a>
-            <button
-              type="button"
-              className="mobile-menu__cta"
-              onClick={() => {
-                openBookingModal();
-                setMobileMenuOpen(false);
-              }}
-            >
-              Book Appointment
-            </button>
           </div>
         )}
       </header>

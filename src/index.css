@@ -2939,10 +2939,6 @@ a {
     display: flex;
   }
 
-  /* Keep header-cta hidden on mobile (it's inside the mobile menu instead) */
-  .site-header .header-cta {
-    display: none;
-  }
 }
 
 @media (min-width: 768px) and (max-width: 1199px) {
