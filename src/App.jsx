@@ -2228,43 +2228,53 @@ export default function App() {
     <div ref={appRef}>
       <script type="application/ld+json">{JSON.stringify(localBusinessSchema)}</script>
       <header className="site-header">
-        {/* Hamburger — mobile only, left of logo */}
-        <button
-          type="button"
-          className="hamburger-btn"
-          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((v) => !v)}
-        >
-          {mobileMenuOpen ? (
-            /* X icon */
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <line x1="4" y1="4" x2="20" y2="20" />
-              <line x1="20" y1="4" x2="4" y2="20" />
-            </svg>
-          ) : (
-            /* Hamburger icon */
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          )}
-        </button>
+        <div className="header-left">
+          {/* Hamburger — mobile only, left of logo */}
+          <button
+            type="button"
+            className="hamburger-btn"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((v) => !v)}
+          >
+            {mobileMenuOpen ? (
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="4" y1="4" x2="20" y2="20" />
+                <line x1="20" y1="4" x2="4" y2="20" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
 
-        <a
-          href="#"
-          className="logo"
-          onClick={(event) => {
-            event.preventDefault();
-            openHomePage();
-            setMobileMenuOpen(false);
-          }}
-        >
-          <img src="/images/ralph-sons-logo.svg?v=2" alt="Ralph and Son logo" className="logo__img" />
-        </a>
+          <a
+            href="#"
+            className="logo"
+            onClick={(event) => {
+              event.preventDefault();
+              openHomePage();
+              setMobileMenuOpen(false);
+            }}
+          >
+            <img src="/images/ralph-sons-logo.svg?v=2" alt="Ralph and Son logo" className="logo__img" />
+          </a>
+        </div>
 
         <nav className="top-nav" aria-label="Header actions">
+          <a
+            href="#"
+            className="top-nav__link"
+            onClick={(event) => {
+              event.preventDefault();
+              openHomePage();
+            }}
+          >
+            Home
+          </a>
           <a
             href="#services"
             className="top-nav__link"
@@ -2293,6 +2303,18 @@ export default function App() {
         {/* Mobile dropdown menu */}
         {mobileMenuOpen && (
           <div className="mobile-menu" role="menu">
+            <a
+              href="#"
+              className="mobile-menu__link"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                openHomePage();
+                setMobileMenuOpen(false);
+              }}
+            >
+              Home
+            </a>
             <a
               href="#services"
               className="mobile-menu__link"
