@@ -726,7 +726,14 @@ export default function ChatWidget({ bookingModalOpen = false }) {
 
   const handleAction = useCallback((action) => {
     if (action === "Book an appointment") {
-      startBooking();
+      // Booking is handled by the StoreCal widget (embed.js, mounted in App).
+      // Close the chat so its modal overlay is unobstructed.
+      if (typeof window !== "undefined" && window.StoreCalWidget) {
+        window.StoreCalWidget.open();
+        setIsOpen(false);
+      } else {
+        startBooking();
+      }
     } else if (action.startsWith("Call ")) {
       window.location.href = `tel:${SHOP_PHONE.replace(/\D/g, "")}`;
     } else if (action === "Services & hours") {

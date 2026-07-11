@@ -77,6 +77,21 @@ const VEHICLE_MAKE_OPTIONS = [
 /** In-app booking modal (hash only — no third-party scheduler). */
 const BOOKING_MODAL_HREF = "#book";
 
+/**
+ * StoreCal booking widget (https://www.storecal.com). Booking is handled by the
+ * hosted StoreCal widget (embed.js) rather than the legacy in-app wizard below.
+ * The script mounts a Shadow-DOM widget into #storecal-mount and exposes
+ * window.StoreCalWidget.open()/.book(service); we hide its own trigger and drive
+ * it from the site's existing "Book appointment" CTAs. Accent is the brand navy
+ * (--secondary) since the widget renders white button text.
+ */
+const STORECAL_STORE_KEY = "sc_e471e08b8d88a6f697";
+const STORECAL_EMBED_SRC = "https://www.storecal.com/embed.js";
+const STORECAL_ACCENT = "#003269";
+/** API origin for read-only content (services), derived from the embed src so a
+ *  domain change only needs editing in one place. Public + CORS-open. */
+const STORECAL_API_BASE = new URL(STORECAL_EMBED_SRC).origin;
+
 /** EmailJS (https://www.emailjs.com/) — set in `.env` per EMAILJS.md */
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID ?? "";
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID ?? "";
@@ -339,6 +354,44 @@ const serviceDetails = [
 
 /** Service dropdown options aligned with Services page + Other (booking wizard). */
 const BOOKING_SERVICE_OPTIONS = [...serviceDetails.map((s) => s.title), "Other"];
+
+/**
+ * Fallback services in the StoreCal shape ({ name, price, description,
+ * durationMin }). Used only while the live fetch is in flight or if it fails,
+ * so the Services page and preview never flash empty. StoreCal is the source of
+ * truth; these local entries just cover the offline case.
+ */
+const FALLBACK_SERVICES = serviceDetails.map((s) => ({
+  _id: s.title,
+  name: s.title,
+  price: s.startingPrice,
+  description: s.included.join(" · "),
+  durationMin: null,
+}));
+
+/**
+ * Live services pulled from StoreCal's public shop-config API. Returns null
+ * while loading or on error (callers fall back to FALLBACK_SERVICES); otherwise
+ * the array StoreCal returns (possibly empty if the shop has none configured).
+ */
+function useStoreCalServices() {
+  const [services, setServices] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${STORECAL_API_BASE}/api/shop-config?key=${encodeURIComponent(STORECAL_STORE_KEY)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((d) => {
+        if (!cancelled) setServices(Array.isArray(d.services) ? d.services : []);
+      })
+      .catch(() => {
+        if (!cancelled) setServices(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return services;
+}
 
 const localBusinessSchema = {
   "@context": "https://schema.org",
@@ -1741,7 +1794,7 @@ function BookingModal({ isOpen, onClose, wizardKey }) {
   );
 }
 
-function ServicesPage({ onGoHome, onOpenBooking, onOpenReviewsPage, enableMobileDetailsPreview }) {
+function ServicesPage({ onGoHome, onOpenBooking, onOpenReviewsPage, enableMobileDetailsPreview, services }) {
   const servicesReviewsTrackRef = useRef(null);
   const servicesReviewsTrackCloneRef = useRef(null);
   const servicesReviewsTrackWrapRef = useRef(null);
@@ -1810,32 +1863,22 @@ function ServicesPage({ onGoHome, onOpenBooking, onOpenReviewsPage, enableMobile
           }`}
         >
           <div className="services-page-view__details-grid">
-            {serviceDetails.map((service) => (
-              <article key={service.title} className="services-page-view__detail-card">
+            {services.map((service) => (
+              <article key={service._id || service.name} className="services-page-view__detail-card">
                 <div className="services-page-view__detail-head">
-                  <h3>{service.title}</h3>
-                  <span className={service.startingPrice === "Request a Quote" ? "services-page-view__badge--quote" : ""}>
-                    {service.startingPrice}
+                  <h3>{service.name}</h3>
+                  <span className={service.price === "Request a Quote" ? "services-page-view__badge--quote" : ""}>
+                    {service.price}
                   </span>
                 </div>
-                <div className="services-page-view__detail-lists">
-                  <div>
-                    <p className="services-page-view__detail-label">Common symptoms</p>
-                    <ul className="services-page-view__detail-list services-page-view__detail-list--symptoms">
-                      {service.symptoms.map((symptom) => (
-                        <li key={symptom}>{symptom}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="services-page-view__detail-label">What is included</p>
-                    <ul className="services-page-view__detail-list services-page-view__detail-list--included">
-                      {service.included.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                {service.description ? (
+                  <p className="services-page-view__detail-desc">{service.description}</p>
+                ) : null}
+                {service.durationMin ? (
+                  <p className="services-page-view__detail-duration">
+                    🕒 Approx. {service.durationMin} min
+                  </p>
+                ) : null}
               </article>
             ))}
           </div>
@@ -2043,19 +2086,55 @@ function CardsFooter({ className = "", compact = false }) {
 export default function App() {
   const appRef = useRef(null);
   const servicesEntrySourceRef = useRef(null);
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [bookingModalKey, setBookingModalKey] = useState(0);
   const [enableServicesMobileDetailsPreview, setEnableServicesMobileDetailsPreview] = useState(false);
   const [activePage, setActivePage] = useState(
     typeof window !== "undefined" ? getActivePageFromHash(window.location.hash) : "home"
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Services are pulled live from StoreCal (single source of truth). While the
+  // fetch is in flight or if it fails, fall back to the local list so nothing
+  // flashes empty. Powers both the Services page and the homepage preview card.
+  const storecalServices = useStoreCalServices();
+  const servicesData = storecalServices === null ? FALLBACK_SERVICES : storecalServices;
+  const renderedCards = useMemo(() => {
+    if (!storecalServices || !storecalServices.length) return cards;
+    const names = storecalServices.map((s) => s.name);
+    return cards.map((c) => (c.id === 3 ? { ...c, points: names } : c));
+  }, [storecalServices]);
+
+  // Opens the StoreCal booking widget. If a CTA is clicked before embed.js has
+  // finished loading, we remember it and open as soon as the widget is ready.
+  const storecalPendingOpenRef = useRef(false);
   const openBookingModal = () => {
-    setBookingModalKey((k) => k + 1);
-    setIsBookingModalOpen(true);
+    if (typeof window !== "undefined" && window.StoreCalWidget) {
+      window.StoreCalWidget.open();
+    } else {
+      storecalPendingOpenRef.current = true;
+    }
   };
-  const closeBookingModal = () => setIsBookingModalOpen(false);
+
+  // Inject the StoreCal embed script once, mounting into the hidden
+  // #storecal-mount host (its own trigger button is hidden via CSS; the modal
+  // overlay is position:fixed so it still covers the viewport when opened).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (document.querySelector("script[data-storecal-embed]")) return;
+    const script = document.createElement("script");
+    script.src = STORECAL_EMBED_SRC;
+    script.async = true;
+    script.setAttribute("data-store", STORECAL_STORE_KEY);
+    script.setAttribute("data-target", "#storecal-mount");
+    script.setAttribute("data-accent", STORECAL_ACCENT);
+    script.setAttribute("data-storecal-embed", "");
+    script.onload = () => {
+      if (storecalPendingOpenRef.current && window.StoreCalWidget) {
+        storecalPendingOpenRef.current = false;
+        window.StoreCalWidget.open();
+      }
+    };
+    document.body.appendChild(script);
+  }, []);
   useEffect(() => {
     resetScrollToTop();
     requestAnimationFrame(resetScrollToTop);
@@ -2266,16 +2345,6 @@ export default function App() {
 
         <nav className="top-nav" aria-label="Header actions">
           <a
-            href="#"
-            className="top-nav__link"
-            onClick={(event) => {
-              event.preventDefault();
-              openHomePage();
-            }}
-          >
-            Home
-          </a>
-          <a
             href="#services"
             className="top-nav__link"
             onClick={(event) => {
@@ -2351,6 +2420,7 @@ export default function App() {
               onOpenBooking={openBookingModal}
               onOpenReviewsPage={openReviewsPage}
               enableMobileDetailsPreview={enableServicesMobileDetailsPreview}
+              services={servicesData}
             />
           </div>
         </main>
@@ -2393,7 +2463,7 @@ export default function App() {
           </div>
 
           <div className="scroll-column">
-            {cards.map((section) => (
+            {renderedCards.map((section) => (
               <section
                 key={section.id}
                 className={`card-slot ${section.type === "image" ? "card-slot--media" : "card-slot--text"} ${section.reviews ? "card-slot--ticker" : ""}`}
@@ -2411,8 +2481,15 @@ export default function App() {
           </div>
         </main>
       )}
-      <BookingModal isOpen={isBookingModalOpen} onClose={closeBookingModal} wizardKey={bookingModalKey} />
-      <ChatWidget bookingModalOpen={isBookingModalOpen} />
+      {/* Hidden host for the StoreCal booking widget. Kept 0×0 with overflow
+          clipped so embed.js's own trigger button never shows; its modal
+          overlay is position:fixed and escapes the clip when opened. */}
+      <div
+        id="storecal-mount"
+        aria-hidden="true"
+        style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+      />
+      <ChatWidget bookingModalOpen={false} />
     </div>
   );
 }

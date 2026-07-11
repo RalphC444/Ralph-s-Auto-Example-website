@@ -2376,6 +2376,20 @@ a {
   border-color: #93c5fd;
 }
 
+.services-page-view__detail-desc {
+  margin: 0.5rem 0 0;
+  color: #334155;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.services-page-view__detail-duration {
+  margin: 0.5rem 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .services-page-view__detail-label {
   margin: 0 0 0.3rem;
   font-size: 0.76rem;
